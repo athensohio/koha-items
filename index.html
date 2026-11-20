@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .tab-btn { cursor: pointer; position: relative; z-index: 10; }
+    .tab-btn { cursor: pointer; position: relative; z-index: 10; user-select: none; }
     .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1d4ed8; background-color: #eff6ff; font-weight: 700; }
     .input-base { width: 100%; border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.45rem 0.65rem; font-size: 0.875rem; transition: all 0.15s; background-color: #fff; }
     .input-base:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
@@ -21,7 +21,7 @@
       <div>
         <div class="flex items-center gap-2">
           <span class="bg-blue-500/30 border border-blue-300/40 text-xs px-2.5 py-0.5 rounded-full font-medium">Koha 系統資料介接</span>
-          <span id="saveStatusBadge" class="bg-emerald-500/20 border border-emerald-300/40 text-emerald-100 text-xs px-2.5 py-0.5 rounded-full">已啟用單機自動暫存</span>
+          <span id="saveStatusBadge" class="bg-emerald-500/20 border border-emerald-300/40 text-emerald-100 text-xs px-2.5 py-0.5 rounded-full">系統初始化中...</span>
         </div>
         <h1 class="text-xl md:text-2xl font-bold mt-1.5 tracking-tight">館藏段 (942 / 952) 與各項代碼對照資料收集表</h1>
         <p class="text-blue-200 text-xs md:text-sm mt-1">請依貴館目前系統實際使用的欄位與代碼填寫，輸入內容將自動暫存於本機瀏覽器，可分多日填寫完成後再一鍵送出。</p>
@@ -367,7 +367,7 @@
     </div>
   </div>
 
-  <script>
+  <script data-cfasync="false">
     (function() {
       var DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
       var STORAGE_KEY = "koha_mapping_form_v1";
@@ -589,6 +589,9 @@
         renderMarcTable();
         DYNAMIC_CATEGORIES.forEach(function(cat) { renderDynamicTable(cat); });
         updateTabBadges();
+
+        var badge = document.getElementById("saveStatusBadge");
+        if (badge) badge.textContent = "已啟用單機自動暫存";
       }
 
       function showFeedback(type, message) {
@@ -671,17 +674,41 @@
         }
       }
 
-      // Bind all event listeners via standard DOM APIs & Event Delegation
-      document.addEventListener("DOMContentLoaded", function() {
+      function initApp() {
         loadFromStorage();
         renderAll();
 
-        // Tab buttons
-        var tabButtons = document.querySelectorAll(".tab-btn");
-        tabButtons.forEach(function(btn) {
-          btn.addEventListener("click", function() {
-            switchTab(btn.getAttribute("data-tab"));
-          });
+        // Event delegation for clicks across the whole document
+        document.addEventListener("click", function(e) {
+          var tabBtn = e.target.closest(".tab-btn");
+          if (tabBtn) {
+            switchTab(tabBtn.getAttribute("data-tab"));
+            return;
+          }
+
+          var addBtn = e.target.closest(".add-row-btn");
+          if (addBtn) {
+            var cat = addBtn.getAttribute("data-add-cat");
+            var newRow = cat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+            formState[cat].push(newRow);
+            renderDynamicTable(cat);
+            saveToStorage();
+            return;
+          }
+
+          var delBtn = e.target.closest(".del-row-btn");
+          if (delBtn) {
+            var delCat = delBtn.getAttribute("data-del-cat");
+            var delIdx = Number(delBtn.getAttribute("data-del-idx"));
+            if (formState[delCat].length <= 1) {
+              formState[delCat][0] = delCat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+            } else {
+              formState[delCat].splice(delIdx, 1);
+            }
+            renderDynamicTable(delCat);
+            saveToStorage();
+            return;
+          }
         });
 
         // Info inputs
@@ -695,18 +722,7 @@
           }
         });
 
-        // Add row buttons
-        document.querySelectorAll(".add-row-btn").forEach(function(btn) {
-          btn.addEventListener("click", function() {
-            var cat = btn.getAttribute("data-add-cat");
-            var newRow = cat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
-            formState[cat].push(newRow);
-            renderDynamicTable(cat);
-            saveToStorage();
-          });
-        });
-
-        // Event delegation for MARC inputs, Dynamic inputs, Checkboxes, and Delete buttons
+        // Event delegation for MARC inputs and Dynamic inputs
         document.addEventListener("input", function(e) {
           var target = e.target;
           if (target.classList.contains("marc-input")) {
@@ -729,21 +745,6 @@
             var cat = target.getAttribute("data-dyn-cat");
             var idx = Number(target.getAttribute("data-dyn-idx"));
             formState[cat][idx].loanable = target.checked;
-            renderDynamicTable(cat);
-            saveToStorage();
-          }
-        });
-
-        document.addEventListener("click", function(e) {
-          var delBtn = e.target.closest(".del-row-btn");
-          if (delBtn) {
-            var cat = delBtn.getAttribute("data-del-cat");
-            var idx = Number(delBtn.getAttribute("data-del-idx"));
-            if (formState[cat].length <= 1) {
-              formState[cat][0] = cat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
-            } else {
-              formState[cat].splice(idx, 1);
-            }
             renderDynamicTable(cat);
             saveToStorage();
           }
@@ -792,7 +793,13 @@
 
         // Submit button
         document.getElementById("submitBtn").addEventListener("click", submitToGoogleSheets);
-      });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
     })();
   </script>
 </body>
