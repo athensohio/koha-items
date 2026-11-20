@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .tab-btn { cursor: pointer; position: relative; z-index: 10; }
     .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1d4ed8; background-color: #eff6ff; font-weight: 700; }
     .input-base { width: 100%; border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.45rem 0.65rem; font-size: 0.875rem; transition: all 0.15s; background-color: #fff; }
     .input-base:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
@@ -26,10 +27,10 @@
         <p class="text-blue-200 text-xs md:text-sm mt-1">請依貴館目前系統實際使用的欄位與代碼填寫，輸入內容將自動暫存於本機瀏覽器，可分多日填寫完成後再一鍵送出。</p>
       </div>
       <div class="flex flex-wrap items-center gap-2 shrink-0">
-        <button type="button" onclick="toggleGasModal(true)" class="bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+        <button type="button" id="btnOpenGasModal" class="bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
           <span>⚙️ 試算表連線設定</span>
         </button>
-        <button type="button" onclick="toggleClearConfirm(true)" class="bg-rose-500/80 hover:bg-rose-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition">
+        <button type="button" id="btnOpenClearBar" class="bg-rose-500/80 hover:bg-rose-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition cursor-pointer">
           清空重填
         </button>
       </div>
@@ -37,14 +38,14 @@
   </header>
 
   <!-- Inline Clear Confirm Banner -->
-  <div id="clearConfirmBar" class="hidden bg-rose-50 border-b border-rose-200">
+  <div id="clearConfirmBar" style="display:none;" class="bg-rose-50 border-b border-rose-200">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="text-sm text-rose-800 font-medium">
         ⚠️ 確定要清除本機暫存的所有填寫資料並恢復預設空白狀態嗎？此動作無法復原。
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button type="button" onclick="executeClearAll()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-md">確定全部清空</button>
-        <button type="button" onclick="toggleClearConfirm(false)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium px-3.5 py-1.5 rounded-md">取消</button>
+        <button type="button" id="btnConfirmClear" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer">確定全部清空</button>
+        <button type="button" id="btnCancelClear" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium px-3.5 py-1.5 rounded-md cursor-pointer">取消</button>
       </div>
     </div>
   </div>
@@ -63,19 +64,19 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">圖書館名稱 <span class="text-rose-500">*</span></label>
-          <input type="text" id="info_libName" class="input-base" placeholder="例：碩陽數位圖書館" oninput="handleInfoChange()" />
+          <input type="text" id="info_libName" class="input-base" placeholder="例：碩陽數位圖書館" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">圖書館代碼 <span class="text-rose-500">*</span></label>
-          <input type="text" id="info_libCode" class="input-base" placeholder="例：SYDTLIB" oninput="handleInfoChange()" />
+          <input type="text" id="info_libCode" class="input-base" placeholder="例：SYDTLIB" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">填表人代號 <span class="text-rose-500">*</span></label>
-          <input type="text" id="info_staffId" class="input-base" placeholder="例：1037（方便我司聯繫）" oninput="handleInfoChange()" />
+          <input type="text" id="info_staffId" class="input-base" placeholder="例：1037（方便我司聯繫）" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">填表人電子郵件信箱 <span class="text-rose-500">*</span></label>
-          <input type="email" id="info_email" class="input-base" placeholder="name@library.edu.tw" oninput="handleInfoChange()" />
+          <input type="email" id="info_email" class="input-base" placeholder="name@library.edu.tw" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">填表日期（系統自動產生）</label>
@@ -86,27 +87,27 @@
 
     <!-- Navigation Tabs -->
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="flex overflow-x-auto border-b border-slate-200 bg-slate-50/70">
-        <button type="button" id="tabBtn_0" onclick="switchTab(0)" class="tab-btn active px-5 py-3.5 text-sm whitespace-nowrap transition flex items-center gap-2">
+      <div id="tabBarContainer" class="flex overflow-x-auto border-b border-slate-200 bg-slate-50/70">
+        <button type="button" data-tab="0" id="tabBtn_0" class="tab-btn active px-5 py-3.5 text-sm whitespace-nowrap transition flex items-center gap-2">
           <span>1. 942 / 952 館藏段對應</span>
           <span id="badge_tab0" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">0/19</span>
         </button>
-        <button type="button" id="tabBtn_1" onclick="switchTab(1)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+        <button type="button" data-tab="1" id="tabBtn_1" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
           <span>2. 分館與排架位置</span>
           <span id="badge_tab1" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
         </button>
-        <button type="button" id="tabBtn_2" onclick="switchTab(2)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+        <button type="button" data-tab="2" id="tabBtn_2" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
           <span>3. 館藏類型、特藏與分類法</span>
           <span id="badge_tab2" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
         </button>
-        <button type="button" id="tabBtn_3" onclick="switchTab(3)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+        <button type="button" data-tab="3" id="tabBtn_3" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
           <span>4. 讀者類型、狀態與館方特有</span>
           <span id="badge_tab3" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
         </button>
       </div>
 
       <!-- TAB 0: 942 & 952 MARC Fields -->
-      <div id="tabPanel_0" class="p-5">
+      <div id="tabPanel_0" style="display:block;" class="p-5">
         <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 class="text-base font-bold text-slate-800">942 / 952 館藏段欄位對應與範例</h3>
@@ -132,15 +133,14 @@
       </div>
 
       <!-- TAB 1: Branches & Shelving Locations -->
-      <div id="tabPanel_1" class="hidden p-5 space-y-8">
-        <!-- 952$a / 952$b -->
+      <div id="tabPanel_1" style="display:none;" class="p-5 space-y-8">
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$a / 952$b — 圖書館名稱與分館代碼對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">若貴館有多個分館或總館，請逐筆列出分館名稱與對應代碼（例如：碩陽數位圖書館 / SYDTLIB）。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('branches')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增分館</button>
+            <button type="button" data-add-cat="branches" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增分館</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -157,14 +157,13 @@
           </div>
         </div>
 
-        <!-- 952$c -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$c — 排架位置對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">請列出館內各書庫、閱覽室或排架區域名稱與代碼（例如：館員櫃檯 / SD）。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('locations')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增排架位置</button>
+            <button type="button" data-add-cat="locations" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增排架位置</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -183,15 +182,14 @@
       </div>
 
       <!-- TAB 2: Item Types, Collections, Classification Sources -->
-      <div id="tabPanel_2" class="hidden p-5 space-y-8">
-        <!-- 942$c / 952$y -->
+      <div id="tabPanel_2" style="display:none;" class="p-5 space-y-8">
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">942$c / 952$y — 館藏類型對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">請列出館藏類型名稱、代碼及是否開放外借（例如：圖書 / BK / 可外借）。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('itemTypes')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館藏類型</button>
+            <button type="button" data-add-cat="itemTypes" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增館藏類型</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -209,14 +207,13 @@
           </div>
         </div>
 
-        <!-- 952$8 -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$8 — 特藏號對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">若有特藏區分（例如：科幻 / SIFI），請列出名稱與代碼。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('collections')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增特藏號</button>
+            <button type="button" data-add-cat="collections" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增特藏號</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -233,14 +230,13 @@
           </div>
         </div>
 
-        <!-- 942$2 / 952$2 -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">942$2 / 952$2 — 分類法來源對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">請列出館內使用的分類法名稱與代碼（例如：中文圖書分類法 / ccL）。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('classSources')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增分類法來源</button>
+            <button type="button" data-add-cat="classSources" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增分類法來源</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -259,15 +255,14 @@
       </div>
 
       <!-- TAB 3: Patron Types, Item Statuses, Custom Fields -->
-      <div id="tabPanel_3" class="hidden p-5 space-y-8">
-        <!-- Patron Types -->
+      <div id="tabPanel_3" style="display:none;" class="p-5 space-y-8">
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">讀者類型對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">請列出貴館的讀者身分別與對應代碼（例如：教職員 / STAFF、學生 / STU）。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('patronTypes')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增讀者類型</button>
+            <button type="button" data-add-cat="patronTypes" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增讀者類型</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -284,14 +279,13 @@
           </div>
         </div>
 
-        <!-- Item Statuses -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">館藏狀態對照（若有需要）</h3>
               <p class="text-xs text-slate-500 mt-0.5">例如遺失、破損、編目中、裝訂中等特殊館藏狀態名稱與代碼。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('itemStatuses')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館藏狀態</button>
+            <button type="button" data-add-cat="itemStatuses" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增館藏狀態</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -308,14 +302,13 @@
           </div>
         </div>
 
-        <!-- Custom Fields -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">館方特有欄位 / 代碼對照</h3>
               <p class="text-xs text-slate-500 mt-0.5">其他需一併轉檔的館方自訂欄位或特殊代碼。</p>
             </div>
-            <button type="button" onclick="addDynamicRow('customFields')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館方特有項目</button>
+            <button type="button" data-add-cat="customFields" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增館方特有項目</button>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
@@ -341,23 +334,23 @@
         <p class="text-xs text-slate-500 mt-0.5">資料將直接寫入專案 Google 試算表，送出後本機仍會保留您的填寫紀錄供日後查閱。</p>
       </div>
       <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-        <button type="button" id="submitBtn" onclick="submitToGoogleSheets()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+        <button type="button" id="submitBtn" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
           <span>確認送出至 Google 試算表</span>
         </button>
       </div>
     </section>
 
     <!-- Status / Feedback Alert Box -->
-    <div id="feedbackBox" class="hidden rounded-xl p-4 border text-sm"></div>
+    <div id="feedbackBox" style="display:none;" class="rounded-xl p-4 border text-sm"></div>
 
   </main>
 
   <!-- GAS Settings Modal -->
-  <div id="gasModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div id="gasModal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3">
         <h3 class="text-lg font-bold text-slate-800">Google 試算表接收端設定 (Apps Script)</h3>
-        <button type="button" onclick="toggleGasModal(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+        <button type="button" id="btnCloseGasModal" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2 cursor-pointer">&times;</button>
       </div>
       <div class="space-y-3 text-sm text-slate-600">
         <p>目前網頁已預設綁定您的 Google Apps Script 接收端網址，若日後有更換新的試算表部署網址，可在此修改並儲存：</p>
@@ -366,402 +359,441 @@
           <input type="url" id="gasUrlInput" class="input-base font-mono text-xs" placeholder="https://script.google.com/macros/s/.../exec" />
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" onclick="resetDefaultGasUrl()" class="text-xs text-slate-500 hover:text-slate-800 underline mr-auto">恢復預設網址</button>
-          <button type="button" onclick="toggleGasModal(false)" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold">取消</button>
-          <button type="button" onclick="saveGasUrl()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">儲存設定</button>
+          <button type="button" id="btnResetGasUrl" class="text-xs text-slate-500 hover:text-slate-800 underline mr-auto cursor-pointer">恢復預設網址</button>
+          <button type="button" id="btnCancelGasModal" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold cursor-pointer">取消</button>
+          <button type="button" id="btnSaveGasUrl" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer">儲存設定</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // =========================================================================
-    // 預設 Google Apps Script 網頁應用程式網址（已為您直接填入專屬部署網址）
-    // =========================================================================
-    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
-    const STORAGE_KEY = "koha_mapping_form_v1";
-    const GAS_URL_KEY = "koha_mapping_gas_url_v1";
+    (function() {
+      var DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
+      var STORAGE_KEY = "koha_mapping_form_v1";
+      var GAS_URL_KEY = "koha_mapping_gas_url_v1";
 
-    // 預設 942 / 952 欄位清單（完整對應 線上對應.ods）
-    const MARC_DEFINITIONS = [
-      { kohaTag: "942$2", label: "分類號來源同952$2", exampleHint: "ccL 中文圖書分類法" },
-      { kohaTag: "942$c", label: "館藏類型同952$y", exampleHint: "BK 圖書" },
-      { kohaTag: "952$2", label: "分類法來源", exampleHint: "ccL 中文圖書分類法" },
-      { kohaTag: "952$3", label: "附加資訊", exampleHint: "附光碟一張" },
-      { kohaTag: "952$8", label: "特藏號", exampleHint: "科幻 SIFI" },
-      { kohaTag: "952$a", label: "館藏所屬圖書館", exampleHint: "SYDTLIB" },
-      { kohaTag: "952$b", label: "館藏所在圖書館", exampleHint: "SYDTLIB" },
-      { kohaTag: "952$c", label: "排架位置", exampleHint: "館員櫃檯 SD" },
-      { kohaTag: "952$d", label: "到館日期", exampleHint: "2026-11-20 (或系統日期格式)" },
-      { kohaTag: "952$e", label: "來源", exampleHint: "贈送 / 採購" },
-      { kohaTag: "952$h", label: "部冊/卷期", exampleHint: "v.1 / 第2冊" },
-      { kohaTag: "952$i", label: "登錄號", exampleHint: "0012345" },
-      { kohaTag: "952$g", label: "成本", exampleHint: "350" },
-      { kohaTag: "952$o", label: "索書號", exampleHint: "857.7 4423" },
-      { kohaTag: "952$p", label: "條碼號", exampleHint: "B00012345" },
-      { kohaTag: "952$t", label: "複本號", exampleHint: "c.2" },
-      { kohaTag: "952$x", label: "非公開註", exampleHint: "館員內部備註" },
-      { kohaTag: "952$y", label: "館藏類型", exampleHint: "BK 圖書" },
-      { kohaTag: "952$z", label: "公開說明", exampleHint: "書況良好" }
-    ];
+      var MARC_DEFINITIONS = [
+        { kohaTag: "942$2", label: "分類號來源同952$2", exampleHint: "ccL 中文圖書分類法" },
+        { kohaTag: "942$c", label: "館藏類型同952$y", exampleHint: "BK 圖書" },
+        { kohaTag: "952$2", label: "分類法來源", exampleHint: "ccL 中文圖書分類法" },
+        { kohaTag: "952$3", label: "附加資訊", exampleHint: "附光碟一張" },
+        { kohaTag: "952$8", label: "特藏號", exampleHint: "科幻 SIFI" },
+        { kohaTag: "952$a", label: "館藏所屬圖書館", exampleHint: "SYDTLIB" },
+        { kohaTag: "952$b", label: "館藏所在圖書館", exampleHint: "SYDTLIB" },
+        { kohaTag: "952$c", label: "排架位置", exampleHint: "館員櫃檯 SD" },
+        { kohaTag: "952$d", label: "到館日期", exampleHint: "2026-11-20 (或系統日期格式)" },
+        { kohaTag: "952$e", label: "來源", exampleHint: "贈送 / 採購" },
+        { kohaTag: "952$h", label: "部冊/卷期", exampleHint: "v.1 / 第2冊" },
+        { kohaTag: "952$i", label: "登錄號", exampleHint: "0012345" },
+        { kohaTag: "952$g", label: "成本", exampleHint: "350" },
+        { kohaTag: "952$o", label: "索書號", exampleHint: "857.7 4423" },
+        { kohaTag: "952$p", label: "條碼號", exampleHint: "B00012345" },
+        { kohaTag: "952$t", label: "複本號", exampleHint: "c.2" },
+        { kohaTag: "952$x", label: "非公開註", exampleHint: "館員內部備註" },
+        { kohaTag: "952$y", label: "館藏類型", exampleHint: "BK 圖書" },
+        { kohaTag: "952$z", label: "公開說明", exampleHint: "書況良好" }
+      ];
 
-    const DYNAMIC_CATEGORIES = ["branches", "locations", "itemTypes", "collections", "classSources", "patronTypes", "itemStatuses", "customFields"];
+      var DYNAMIC_CATEGORIES = ["branches", "locations", "itemTypes", "collections", "classSources", "patronTypes", "itemStatuses", "customFields"];
 
-    let formState = getInitialState();
+      function getTodayString() {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, "0");
+        var d = String(now.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + d;
+      }
 
-    function getTodayString() {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-
-    function getInitialState() {
-      return {
-        info: {
-          libName: "",
-          libCode: "",
-          staffId: "",
-          email: "",
-          submitDate: getTodayString()
-        },
-        marcFields: MARC_DEFINITIONS.map(def => ({
-          kohaTag: def.kohaTag,
-          label: def.label,
-          sourceTag: "",
-          example: "",
-          note: ""
-        })),
-        branches: [{ name: "", code: "" }],
-        locations: [{ name: "", code: "" }],
-        itemTypes: [{ name: "", code: "", loanable: true }],
-        collections: [{ name: "", code: "" }],
-        classSources: [{ name: "", code: "" }],
-        patronTypes: [{ name: "", code: "" }],
-        itemStatuses: [{ name: "", code: "" }],
-        customFields: [{ name: "", code: "" }]
-      };
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    // Safe localStorage helpers
-    function loadFromStorage() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          formState = Object.assign(getInitialState(), parsed);
-          formState.info.submitDate = getTodayString();
-          // Ensure marcFields length aligns with MARC_DEFINITIONS
-          formState.marcFields = MARC_DEFINITIONS.map((def, idx) => {
-            const existing = (parsed.marcFields && parsed.marcFields[idx]) || {};
+      function getInitialState() {
+        return {
+          info: {
+            libName: "",
+            libCode: "",
+            staffId: "",
+            email: "",
+            submitDate: getTodayString()
+          },
+          marcFields: MARC_DEFINITIONS.map(function(def) {
             return {
               kohaTag: def.kohaTag,
               label: def.label,
-              sourceTag: existing.sourceTag || "",
-              example: existing.example || "",
-              note: existing.note || ""
+              sourceTag: "",
+              example: "",
+              note: ""
             };
-          });
-          DYNAMIC_CATEGORIES.forEach(cat => {
-            if (!Array.isArray(formState[cat]) || formState[cat].length === 0) {
-              formState[cat] = cat === "itemTypes" ? [{ name: "", code: "", loanable: true }] : [{ name: "", code: "" }];
-            }
-          });
+          }),
+          branches: [{ name: "", code: "" }],
+          locations: [{ name: "", code: "" }],
+          itemTypes: [{ name: "", code: "", loanable: true }],
+          collections: [{ name: "", code: "" }],
+          classSources: [{ name: "", code: "" }],
+          patronTypes: [{ name: "", code: "" }],
+          itemStatuses: [{ name: "", code: "" }],
+          customFields: [{ name: "", code: "" }]
+        };
+      }
+
+      var formState = getInitialState();
+
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function loadFromStorage() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            formState = Object.assign(getInitialState(), parsed);
+            formState.info = Object.assign(getInitialState().info, parsed.info || {});
+            formState.info.submitDate = getTodayString();
+            formState.marcFields = MARC_DEFINITIONS.map(function(def, idx) {
+              var existing = (parsed.marcFields && parsed.marcFields[idx]) || {};
+              return {
+                kohaTag: def.kohaTag,
+                label: def.label,
+                sourceTag: existing.sourceTag || "",
+                example: existing.example || "",
+                note: existing.note || ""
+              };
+            });
+            DYNAMIC_CATEGORIES.forEach(function(cat) {
+              if (!Array.isArray(formState[cat]) || formState[cat].length === 0) {
+                formState[cat] = cat === "itemTypes" ? [{ name: "", code: "", loanable: true }] : [{ name: "", code: "" }];
+              }
+            });
+          }
+        } catch (e) {
+          console.warn("Local storage read skipped:", e);
         }
-      } catch (e) {
-        console.warn("Local storage read skipped:", e);
       }
-    }
 
-    function saveToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(formState));
-        const now = new Date();
-        const timeStr = now.toTimeString().split(" ")[0];
-        const badge = document.getElementById("saveStatusBadge");
-        if (badge) badge.textContent = `已自動暫存於 ${timeStr}`;
-      } catch (e) {
-        console.warn("Local storage write skipped:", e);
+      function saveToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(formState));
+          var now = new Date();
+          var timeStr = now.toTimeString().split(" ")[0];
+          var badge = document.getElementById("saveStatusBadge");
+          if (badge) badge.textContent = "已自動暫存於 " + timeStr;
+        } catch (e) {
+          console.warn("Local storage write skipped:", e);
+        }
+        updateTabBadges();
       }
-      updateTabBadges();
-    }
 
-    function getActiveGasUrl() {
-      try {
-        const saved = localStorage.getItem(GAS_URL_KEY);
-        if (saved && saved.trim()) return saved.trim();
-      } catch (e) {}
-      return DEFAULT_GAS_URL;
-    }
-
-    // Render all UI
-    function renderAll() {
-      document.getElementById("info_libName").value = formState.info.libName || "";
-      document.getElementById("info_libCode").value = formState.info.libCode || "";
-      document.getElementById("info_staffId").value = formState.info.staffId || "";
-      document.getElementById("info_email").value = formState.info.email || "";
-      document.getElementById("info_submitDate").value = formState.info.submitDate || getTodayString();
-
-      renderMarcTable();
-      DYNAMIC_CATEGORIES.forEach(cat => renderDynamicTable(cat));
-      updateTabBadges();
-    }
-
-    function renderMarcTable() {
-      const tbody = document.getElementById("marcTableBody");
-      tbody.innerHTML = MARC_DEFINITIONS.map((def, idx) => {
-        const row = formState.marcFields[idx] || { sourceTag: "", example: "", note: "" };
-        return `
-          <tr class="hover:bg-blue-50/40 transition">
-            <td class="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">${escapeHtml(def.kohaTag)}</td>
-            <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(def.label)}</td>
-            <td class="py-2.5 px-3">
-              <span class="inline-block bg-amber-50 text-amber-800 border border-amber-200/80 text-xs px-2 py-0.5 rounded">${escapeHtml(def.exampleHint)}</span>
-            </td>
-            <td class="py-2 px-3">
-              <input type="text" class="input-base" placeholder="如：805$c 或無" value="${escapeHtml(row.sourceTag)}" oninput="updateMarcField(${idx}, 'sourceTag', this.value)" />
-            </td>
-            <td class="py-2 px-3">
-              <input type="text" class="input-base" placeholder="請填貴館實際範例" value="${escapeHtml(row.example)}" oninput="updateMarcField(${idx}, 'example', this.value)" />
-            </td>
-            <td class="py-2 px-3">
-              <input type="text" class="input-base" placeholder="備註或特殊規則" value="${escapeHtml(row.note)}" oninput="updateMarcField(${idx}, 'note', this.value)" />
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function renderDynamicTable(category) {
-      const tbody = document.getElementById(`tbody_${category}`);
-      const rows = formState[category] || [];
-      const isItemType = category === "itemTypes";
-
-      tbody.innerHTML = rows.map((row, idx) => `
-        <tr class="hover:bg-slate-50">
-          <td class="py-2 px-3 text-center text-xs text-slate-400 font-mono">${idx + 1}</td>
-          <td class="py-2 px-3">
-            <input type="text" class="input-base" placeholder="請輸入名稱" value="${escapeHtml(row.name)}" oninput="updateDynamicField('${category}', ${idx}, 'name', this.value)" />
-          </td>
-          <td class="py-2 px-3">
-            <input type="text" class="input-base font-mono" placeholder="請輸入代碼" value="${escapeHtml(row.code)}" oninput="updateDynamicField('${category}', ${idx}, 'code', this.value)" />
-          </td>
-          ${isItemType ? `
-          <td class="py-2 px-3 text-center">
-            <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-              <input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300" ${row.loanable ? "checked" : ""} onchange="updateDynamicField('${category}', ${idx}, 'loanable', this.checked)" />
-              <span class="text-xs text-slate-700">${row.loanable ? "可外借" : "限館內"}</span>
-            </label>
-          </td>
-          ` : ""}
-          <td class="py-2 px-3 text-center">
-            <button type="button" onclick="removeDynamicRow('${category}', ${idx})" class="text-rose-500 hover:text-rose-700 text-xs font-medium px-2 py-1 rounded hover:bg-rose-50" title="刪除此列">刪除</button>
-          </td>
-        </tr>
-      `).join("");
-    }
-
-    // Event handlers
-    function handleInfoChange() {
-      formState.info.libName = document.getElementById("info_libName").value;
-      formState.info.libCode = document.getElementById("info_libCode").value;
-      formState.info.staffId = document.getElementById("info_staffId").value;
-      formState.info.email = document.getElementById("info_email").value;
-      saveToStorage();
-    }
-
-    function updateMarcField(idx, field, value) {
-      formState.marcFields[idx][field] = value;
-      saveToStorage();
-    }
-
-    function updateDynamicField(category, idx, field, value) {
-      formState[category][idx][field] = value;
-      if (category === "itemTypes" && field === "loanable") {
-        renderDynamicTable(category);
+      function getActiveGasUrl() {
+        try {
+          var saved = localStorage.getItem(GAS_URL_KEY);
+          if (saved && saved.trim()) return saved.trim();
+        } catch (e) {}
+        return DEFAULT_GAS_URL;
       }
-      saveToStorage();
-    }
 
-    function addDynamicRow(category) {
-      const newRow = category === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
-      formState[category].push(newRow);
-      renderDynamicTable(category);
-      saveToStorage();
-    }
-
-    function removeDynamicRow(category, idx) {
-      if (formState[category].length <= 1) {
-        formState[category][0] = category === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
-      } else {
-        formState[category].splice(idx, 1);
+      function switchTab(tabIndex) {
+        var idx = Number(tabIndex);
+        for (var i = 0; i < 4; i++) {
+          var btn = document.getElementById("tabBtn_" + i);
+          var panel = document.getElementById("tabPanel_" + i);
+          if (!btn || !panel) continue;
+          if (i === idx) {
+            btn.classList.add("active");
+            btn.classList.remove("text-slate-600");
+            panel.style.display = "block";
+          } else {
+            btn.classList.remove("active");
+            btn.classList.add("text-slate-600");
+            panel.style.display = "none";
+          }
+        }
       }
-      renderDynamicTable(category);
-      saveToStorage();
-    }
 
-    function switchTab(tabIndex) {
-      for (let i = 0; i < 4; i++) {
-        const btn = document.getElementById(`tabBtn_${i}`);
-        const panel = document.getElementById(`tabPanel_${i}`);
-        if (i === tabIndex) {
-          btn.classList.add("active");
-          btn.classList.remove("text-slate-600");
-          panel.classList.remove("hidden");
+      function renderMarcTable() {
+        var tbody = document.getElementById("marcTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = MARC_DEFINITIONS.map(function(def, idx) {
+          var row = formState.marcFields[idx] || { sourceTag: "", example: "", note: "" };
+          return '<tr class="hover:bg-blue-50/40 transition">' +
+            '<td class="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">' + escapeHtml(def.kohaTag) + '</td>' +
+            '<td class="py-2.5 px-3 font-medium text-slate-800">' + escapeHtml(def.label) + '</td>' +
+            '<td class="py-2.5 px-3"><span class="inline-block bg-amber-50 text-amber-800 border border-amber-200/80 text-xs px-2 py-0.5 rounded">' + escapeHtml(def.exampleHint) + '</span></td>' +
+            '<td class="py-2 px-3"><input type="text" data-marc-idx="' + idx + '" data-marc-field="sourceTag" class="marc-input input-base" placeholder="如：805$c 或無" value="' + escapeHtml(row.sourceTag) + '" /></td>' +
+            '<td class="py-2 px-3"><input type="text" data-marc-idx="' + idx + '" data-marc-field="example" class="marc-input input-base" placeholder="請填貴館實際範例" value="' + escapeHtml(row.example) + '" /></td>' +
+            '<td class="py-2 px-3"><input type="text" data-marc-idx="' + idx + '" data-marc-field="note" class="marc-input input-base" placeholder="備註或特殊規則" value="' + escapeHtml(row.note) + '" /></td>' +
+          '</tr>';
+        }).join("");
+      }
+
+      function renderDynamicTable(category) {
+        var tbody = document.getElementById("tbody_" + category);
+        if (!tbody) return;
+        var rows = formState[category] || [];
+        var isItemType = category === "itemTypes";
+
+        tbody.innerHTML = rows.map(function(row, idx) {
+          var loanCell = isItemType ? (
+            '<td class="py-2 px-3 text-center">' +
+              '<label class="inline-flex items-center gap-1.5 cursor-pointer select-none">' +
+                '<input type="checkbox" data-dyn-cat="' + category + '" data-dyn-idx="' + idx + '" data-dyn-field="loanable" class="dyn-checkbox w-4 h-4 text-blue-600 rounded border-slate-300" ' + (row.loanable ? "checked" : "") + ' />' +
+                '<span class="text-xs text-slate-700">' + (row.loanable ? "可外借" : "限館內") + '</span>' +
+              '</label>' +
+            '</td>'
+          ) : "";
+
+          return '<tr class="hover:bg-slate-50">' +
+            '<td class="py-2 px-3 text-center text-xs text-slate-400 font-mono">' + (idx + 1) + '</td>' +
+            '<td class="py-2 px-3"><input type="text" data-dyn-cat="' + category + '" data-dyn-idx="' + idx + '" data-dyn-field="name" class="dyn-input input-base" placeholder="請輸入名稱" value="' + escapeHtml(row.name) + '" /></td>' +
+            '<td class="py-2 px-3"><input type="text" data-dyn-cat="' + category + '" data-dyn-idx="' + idx + '" data-dyn-field="code" class="dyn-input input-base font-mono" placeholder="請輸入代碼" value="' + escapeHtml(row.code) + '" /></td>' +
+            loanCell +
+            '<td class="py-2 px-3 text-center"><button type="button" data-del-cat="' + category + '" data-del-idx="' + idx + '" class="del-row-btn text-rose-500 hover:text-rose-700 text-xs font-medium px-2 py-1 rounded hover:bg-rose-50 cursor-pointer">刪除</button></td>' +
+          '</tr>';
+        }).join("");
+      }
+
+      function updateTabBadges() {
+        var filledMarc = formState.marcFields.filter(function(r) {
+          return (r.sourceTag && r.sourceTag.trim()) || (r.example && r.example.trim()) || (r.note && r.note.trim());
+        }).length;
+        var b0 = document.getElementById("badge_tab0");
+        if (b0) b0.textContent = filledMarc + "/" + MARC_DEFINITIONS.length;
+
+        function countRows(cats) {
+          return cats.reduce(function(sum, cat) {
+            return sum + (formState[cat] || []).filter(function(r) {
+              return (r.name && r.name.trim()) || (r.code && r.code.trim());
+            }).length;
+          }, 0);
+        }
+
+        var b1 = document.getElementById("badge_tab1");
+        var b2 = document.getElementById("badge_tab2");
+        var b3 = document.getElementById("badge_tab3");
+        if (b1) b1.textContent = countRows(["branches", "locations"]) + " 筆";
+        if (b2) b2.textContent = countRows(["itemTypes", "collections", "classSources"]) + " 筆";
+        if (b3) b3.textContent = countRows(["patronTypes", "itemStatuses", "customFields"]) + " 筆";
+      }
+
+      function renderAll() {
+        document.getElementById("info_libName").value = formState.info.libName || "";
+        document.getElementById("info_libCode").value = formState.info.libCode || "";
+        document.getElementById("info_staffId").value = formState.info.staffId || "";
+        document.getElementById("info_email").value = formState.info.email || "";
+        document.getElementById("info_submitDate").value = formState.info.submitDate || getTodayString();
+
+        renderMarcTable();
+        DYNAMIC_CATEGORIES.forEach(function(cat) { renderDynamicTable(cat); });
+        updateTabBadges();
+      }
+
+      function showFeedback(type, message) {
+        var box = document.getElementById("feedbackBox");
+        if (!box) return;
+        box.style.display = "block";
+        box.classList.remove("bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-rose-50", "border-rose-200", "text-rose-800");
+        if (type === "success") {
+          box.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
         } else {
-          btn.classList.remove("active");
-          btn.classList.add("text-slate-600");
-          panel.classList.add("hidden");
+          box.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
+        }
+        box.innerHTML = message;
+        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function submitToGoogleSheets() {
+        var gasUrl = getActiveGasUrl();
+        if (!gasUrl) {
+          showFeedback("error", "⚠️ 尚未設定 Google Apps Script 網址，請點擊右上角「⚙️ 試算表連線設定」。");
+          return;
+        }
+
+        var libName = formState.info.libName || "";
+        var libCode = formState.info.libCode || "";
+        var staffId = formState.info.staffId || "";
+        var email = formState.info.email || "";
+
+        if (!libName.trim() || !libCode.trim() || !staffId.trim() || !email.trim()) {
+          showFeedback("error", "⚠️ 請完整填寫上方「單位基本資訊」的四個必填欄位（圖書館名稱、代碼、填表人代號、電子郵件信箱）後再送出。");
+          document.getElementById("info_libName").focus();
+          return;
+        }
+
+        var btn = document.getElementById("submitBtn");
+        var originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add("opacity-70", "cursor-wait");
+        btn.innerHTML = "<span>正在寫入 Google 試算表，請稍候...</span>";
+
+        var payload = {
+          info: {
+            libName: libName.trim(),
+            libCode: libCode.trim(),
+            staffId: staffId.trim(),
+            email: email.trim(),
+            submitDate: getTodayString()
+          },
+          marcFields: formState.marcFields,
+          branches: formState.branches.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          locations: formState.locations.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          itemTypes: formState.itemTypes.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          collections: formState.collections.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          classSources: formState.classSources.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          patronTypes: formState.patronTypes.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          itemStatuses: formState.itemStatuses.filter(function(r) { return r.name.trim() || r.code.trim(); }),
+          customFields: formState.customFields.filter(function(r) { return r.name.trim() || r.code.trim(); })
+        };
+
+        try {
+          var response = await fetch(gasUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+          });
+
+          var result = await response.json();
+          if (result && result.status === "success") {
+            showFeedback("success", "✅ <strong>資料已成功送出並寫入 Google 試算表！</strong><br/>單位：" + escapeHtml(libName) + " (" + escapeHtml(libCode) + ") ｜ 送出日期：" + payload.info.submitDate);
+          } else {
+            throw new Error((result && result.message) || "試算表端回傳異常");
+          }
+        } catch (err) {
+          console.error("Submit error:", err);
+          showFeedback("error", "❌ <strong>送出時發生錯誤：</strong>" + escapeHtml(err.message) + "<br/><span class='text-xs'>請確認 Google Apps Script 部署權限已設為「所有人 (Anyone)」，或稍後再試一次。</span>");
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove("opacity-70", "cursor-wait");
+          btn.innerHTML = originalText;
         }
       }
-    }
 
-    function updateTabBadges() {
-      const filledMarc = formState.marcFields.filter(r => (r.sourceTag && r.sourceTag.trim()) || (r.example && r.example.trim()) || (r.note && r.note.trim())).length;
-      document.getElementById("badge_tab0").textContent = `${filledMarc}/${MARC_DEFINITIONS.length}`;
+      // Bind all event listeners via standard DOM APIs & Event Delegation
+      document.addEventListener("DOMContentLoaded", function() {
+        loadFromStorage();
+        renderAll();
 
-      const countRows = (cats) => cats.reduce((sum, cat) => {
-        return sum + (formState[cat] || []).filter(r => (r.name && r.name.trim()) || (r.code && r.code.trim())).length;
-      }, 0);
-
-      document.getElementById("badge_tab1").textContent = `${countRows(["branches", "locations"])} 筆`;
-      document.getElementById("badge_tab2").textContent = `${countRows(["itemTypes", "collections", "classSources"])} 筆`;
-      document.getElementById("badge_tab3").textContent = `${countRows(["patronTypes", "itemStatuses", "customFields"])} 筆`;
-    }
-
-    // Clear confirmation
-    function toggleClearConfirm(show) {
-      const bar = document.getElementById("clearConfirmBar");
-      if (show) bar.classList.remove("hidden");
-      else bar.classList.add("hidden");
-    }
-
-    function executeClearAll() {
-      formState = getInitialState();
-      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-      renderAll();
-      toggleClearConfirm(false);
-      showFeedback("success", "已清空所有欄位並恢復為預設狀態。");
-    }
-
-    // GAS Modal controls
-    function toggleGasModal(show) {
-      const modal = document.getElementById("gasModal");
-      if (show) {
-        document.getElementById("gasUrlInput").value = getActiveGasUrl();
-        modal.classList.remove("hidden");
-      } else {
-        modal.classList.add("hidden");
-      }
-    }
-
-    function saveGasUrl() {
-      const val = document.getElementById("gasUrlInput").value.trim();
-      try {
-        if (val) localStorage.setItem(GAS_URL_KEY, val);
-        else localStorage.removeItem(GAS_URL_KEY);
-      } catch (e) {}
-      toggleGasModal(false);
-      showFeedback("success", "已更新 Google Apps Script 連線網址設定。");
-    }
-
-    function resetDefaultGasUrl() {
-      try { localStorage.removeItem(GAS_URL_KEY); } catch (e) {}
-      document.getElementById("gasUrlInput").value = DEFAULT_GAS_URL;
-      showFeedback("success", "已恢復為預設的 Google Apps Script 部署網址。");
-    }
-
-    function showFeedback(type, message) {
-      const box = document.getElementById("feedbackBox");
-      box.classList.remove("hidden", "bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-rose-50", "border-rose-200", "text-rose-800");
-      if (type === "success") {
-        box.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
-      } else {
-        box.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
-      }
-      box.innerHTML = message;
-      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-
-    // Submit to Google Sheets via GAS
-    async function submitToGoogleSheets() {
-      const gasUrl = getActiveGasUrl();
-      if (!gasUrl) {
-        showFeedback("error", "⚠️ 尚未設定 Google Apps Script 網址，請點擊右上角「⚙️ 試算表連線設定」。");
-        return;
-      }
-
-      const { libName, libCode, staffId, email } = formState.info;
-      if (!libName.trim() || !libCode.trim() || !staffId.trim() || !email.trim()) {
-        showFeedback("error", "⚠️ 請完整填寫上方「單位基本資訊」的四個必填欄位（圖書館名稱、代碼、填表人代號、電子郵件信箱）後再送出。");
-        document.getElementById("info_libName").focus();
-        return;
-      }
-
-      const btn = document.getElementById("submitBtn");
-      const originalText = btn.innerHTML;
-      btn.disabled = true;
-      btn.classList.add("opacity-70", "cursor-wait");
-      btn.innerHTML = `<span>正在寫入 Google 試算表，請稍候...</span>`;
-
-      // Prepare clean payload
-      const payload = {
-        info: {
-          libName: libName.trim(),
-          libCode: libCode.trim(),
-          staffId: staffId.trim(),
-          email: email.trim(),
-          submitDate: getTodayString()
-        },
-        marcFields: formState.marcFields,
-        branches: formState.branches.filter(r => r.name.trim() || r.code.trim()),
-        locations: formState.locations.filter(r => r.name.trim() || r.code.trim()),
-        itemTypes: formState.itemTypes.filter(r => r.name.trim() || r.code.trim()),
-        collections: formState.collections.filter(r => r.name.trim() || r.code.trim()),
-        classSources: formState.classSources.filter(r => r.name.trim() || r.code.trim()),
-        patronTypes: formState.patronTypes.filter(r => r.name.trim() || r.code.trim()),
-        itemStatuses: formState.itemStatuses.filter(r => r.name.trim() || r.code.trim()),
-        customFields: formState.customFields.filter(r => r.name.trim() || r.code.trim())
-      };
-
-      try {
-        // Use text/plain to avoid CORS preflight OPTIONS request on Google Apps Script
-        const response = await fetch(gasUrl, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
+        // Tab buttons
+        var tabButtons = document.querySelectorAll(".tab-btn");
+        tabButtons.forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            switchTab(btn.getAttribute("data-tab"));
+          });
         });
 
-        const result = await response.json();
-        if (result && result.status === "success") {
-          showFeedback("success", `✅ <strong>資料已成功送出並寫入 Google 試算表！</strong><br/>單位：${escapeHtml(libName)} (${escapeHtml(libCode)}) ｜ 送出日期：${payload.info.submitDate}`);
-        } else {
-          throw new Error((result && result.message) || "試算表端回傳異常");
-        }
-      } catch (err) {
-        console.error("Submit error:", err);
-        showFeedback("error", `❌ <strong>送出時發生錯誤：</strong>${escapeHtml(err.message)}<br/><span class="text-xs">請確認 Google Apps Script 部署權限已設為「所有人 (Anyone)」，或稍後再試一次。</span>`);
-      } finally {
-        btn.disabled = false;
-        btn.classList.remove("opacity-70", "cursor-wait");
-        btn.innerHTML = originalText;
-      }
-    }
+        // Info inputs
+        ["libName", "libCode", "staffId", "email"].forEach(function(key) {
+          var el = document.getElementById("info_" + key);
+          if (el) {
+            el.addEventListener("input", function() {
+              formState.info[key] = el.value;
+              saveToStorage();
+            });
+          }
+        });
 
-    // Boot
-    loadFromStorage();
-    renderAll();
+        // Add row buttons
+        document.querySelectorAll(".add-row-btn").forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            var cat = btn.getAttribute("data-add-cat");
+            var newRow = cat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+            formState[cat].push(newRow);
+            renderDynamicTable(cat);
+            saveToStorage();
+          });
+        });
+
+        // Event delegation for MARC inputs, Dynamic inputs, Checkboxes, and Delete buttons
+        document.addEventListener("input", function(e) {
+          var target = e.target;
+          if (target.classList.contains("marc-input")) {
+            var idx = Number(target.getAttribute("data-marc-idx"));
+            var field = target.getAttribute("data-marc-field");
+            formState.marcFields[idx][field] = target.value;
+            saveToStorage();
+          } else if (target.classList.contains("dyn-input")) {
+            var cat = target.getAttribute("data-dyn-cat");
+            var dIdx = Number(target.getAttribute("data-dyn-idx"));
+            var dField = target.getAttribute("data-dyn-field");
+            formState[cat][dIdx][dField] = target.value;
+            saveToStorage();
+          }
+        });
+
+        document.addEventListener("change", function(e) {
+          var target = e.target;
+          if (target.classList.contains("dyn-checkbox")) {
+            var cat = target.getAttribute("data-dyn-cat");
+            var idx = Number(target.getAttribute("data-dyn-idx"));
+            formState[cat][idx].loanable = target.checked;
+            renderDynamicTable(cat);
+            saveToStorage();
+          }
+        });
+
+        document.addEventListener("click", function(e) {
+          var delBtn = e.target.closest(".del-row-btn");
+          if (delBtn) {
+            var cat = delBtn.getAttribute("data-del-cat");
+            var idx = Number(delBtn.getAttribute("data-del-idx"));
+            if (formState[cat].length <= 1) {
+              formState[cat][0] = cat === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+            } else {
+              formState[cat].splice(idx, 1);
+            }
+            renderDynamicTable(cat);
+            saveToStorage();
+          }
+        });
+
+        // Clear bar buttons
+        document.getElementById("btnOpenClearBar").addEventListener("click", function() {
+          document.getElementById("clearConfirmBar").style.display = "block";
+        });
+        document.getElementById("btnCancelClear").addEventListener("click", function() {
+          document.getElementById("clearConfirmBar").style.display = "none";
+        });
+        document.getElementById("btnConfirmClear").addEventListener("click", function() {
+          formState = getInitialState();
+          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+          renderAll();
+          document.getElementById("clearConfirmBar").style.display = "none";
+          showFeedback("success", "已清空所有欄位並恢復為預設狀態。");
+        });
+
+        // GAS Modal buttons
+        document.getElementById("btnOpenGasModal").addEventListener("click", function() {
+          document.getElementById("gasUrlInput").value = getActiveGasUrl();
+          document.getElementById("gasModal").style.display = "flex";
+        });
+        document.getElementById("btnCloseGasModal").addEventListener("click", function() {
+          document.getElementById("gasModal").style.display = "none";
+        });
+        document.getElementById("btnCancelGasModal").addEventListener("click", function() {
+          document.getElementById("gasModal").style.display = "none";
+        });
+        document.getElementById("btnResetGasUrl").addEventListener("click", function() {
+          try { localStorage.removeItem(GAS_URL_KEY); } catch (e) {}
+          document.getElementById("gasUrlInput").value = DEFAULT_GAS_URL;
+          showFeedback("success", "已恢復為預設的 Google Apps Script 部署網址。");
+        });
+        document.getElementById("btnSaveGasUrl").addEventListener("click", function() {
+          var val = document.getElementById("gasUrlInput").value.trim();
+          try {
+            if (val) localStorage.setItem(GAS_URL_KEY, val);
+            else localStorage.removeItem(GAS_URL_KEY);
+          } catch (e) {}
+          document.getElementById("gasModal").style.display = "none";
+          showFeedback("success", "已更新 Google Apps Script 連線網址設定。");
+        });
+
+        // Submit button
+        document.getElementById("submitBtn").addEventListener("click", submitToGoogleSheets);
+      });
+    })();
   </script>
 </body>
 </html>
