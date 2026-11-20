@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Koha 圖書館系統導入 — 館藏段與代碼對照資料收集服務</title>
+  <title>Koha 圖書館系統導入 — 館藏段 (942 / 952) 與各項代碼對照資料收集服務</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -27,10 +27,7 @@
         <p class="text-blue-200 text-xs md:text-sm mt-1">請依貴館目前系統實際使用的欄位與代碼填寫，輸入內容將自動暫存於本機瀏覽器，可分多日填寫完成後再一鍵送出。</p>
       </div>
       <div class="flex flex-wrap items-center gap-2 shrink-0">
-        <button type="button" id="btnOpenGasModal" class="bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
-          <span>⚙️ 試算表連線設定</span>
-        </button>
-        <button type="button" id="btnOpenClearBar" class="bg-rose-500/80 hover:bg-rose-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition cursor-pointer">
+        <button type="button" id="btnOpenClearBar" class="bg-rose-500/80 hover:bg-rose-600 text-white text-xs md:text-sm px-3.5 py-2 rounded-lg transition cursor-pointer">
           清空重填
         </button>
       </div>
@@ -345,33 +342,13 @@
 
   </main>
 
-  <!-- GAS Settings Modal -->
-  <div id="gasModal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-        <h3 class="text-lg font-bold text-slate-800">Google 試算表接收端設定 (Apps Script)</h3>
-        <button type="button" id="btnCloseGasModal" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2 cursor-pointer">&times;</button>
-      </div>
-      <div class="space-y-3 text-sm text-slate-600">
-        <p>目前網頁已預設綁定您的 Google Apps Script 接收端網址，若日後有更換新的試算表部署網址，可在此修改並儲存：</p>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Google Apps Script 網頁應用程式網址 (.exec)</label>
-          <input type="url" id="gasUrlInput" class="input-base font-mono text-xs" placeholder="https://script.google.com/macros/s/.../exec" />
-        </div>
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" id="btnResetGasUrl" class="text-xs text-slate-500 hover:text-slate-800 underline mr-auto cursor-pointer">恢復預設網址</button>
-          <button type="button" id="btnCancelGasModal" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold cursor-pointer">取消</button>
-          <button type="button" id="btnSaveGasUrl" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer">儲存設定</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script data-cfasync="false">
     (function() {
-      var DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
+      // =========================================================================
+      // Google Apps Script 網頁應用程式接收端網址（日後若有異動請修改此常數）
+      // =========================================================================
+      var GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
       var STORAGE_KEY = "koha_mapping_form_v1";
-      var GAS_URL_KEY = "koha_mapping_gas_url_v1";
 
       var MARC_DEFINITIONS = [
         { kohaTag: "942$2", label: "分類號來源同952$2", exampleHint: "ccL 中文圖書分類法" },
@@ -488,14 +465,6 @@
         updateTabBadges();
       }
 
-      function getActiveGasUrl() {
-        try {
-          var saved = localStorage.getItem(GAS_URL_KEY);
-          if (saved && saved.trim()) return saved.trim();
-        } catch (e) {}
-        return DEFAULT_GAS_URL;
-      }
-
       function switchTab(tabIndex) {
         var idx = Number(tabIndex);
         for (var i = 0; i < 4; i++) {
@@ -609,9 +578,8 @@
       }
 
       async function submitToGoogleSheets() {
-        var gasUrl = getActiveGasUrl();
-        if (!gasUrl) {
-          showFeedback("error", "⚠️ 尚未設定 Google Apps Script 網址，請點擊右上角「⚙️ 試算表連線設定」。");
+        if (!GAS_ENDPOINT_URL) {
+          showFeedback("error", "⚠️ 系統尚未設定資料接收端點，請聯繫系統管理員。");
           return;
         }
 
@@ -652,7 +620,7 @@
         };
 
         try {
-          var response = await fetch(gasUrl, {
+          var response = await fetch(GAS_ENDPOINT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
@@ -666,7 +634,7 @@
           }
         } catch (err) {
           console.error("Submit error:", err);
-          showFeedback("error", "❌ <strong>送出時發生錯誤：</strong>" + escapeHtml(err.message) + "<br/><span class='text-xs'>請確認 Google Apps Script 部署權限已設為「所有人 (Anyone)」，或稍後再試一次。</span>");
+          showFeedback("error", "❌ <strong>送出時發生錯誤：</strong>" + escapeHtml(err.message) + "<br/><span class='text-xs'>請稍後再試一次，或聯繫我司服務人員協助確認。</span>");
         } finally {
           btn.disabled = false;
           btn.classList.remove("opacity-70", "cursor-wait");
@@ -763,32 +731,6 @@
           renderAll();
           document.getElementById("clearConfirmBar").style.display = "none";
           showFeedback("success", "已清空所有欄位並恢復為預設狀態。");
-        });
-
-        // GAS Modal buttons
-        document.getElementById("btnOpenGasModal").addEventListener("click", function() {
-          document.getElementById("gasUrlInput").value = getActiveGasUrl();
-          document.getElementById("gasModal").style.display = "flex";
-        });
-        document.getElementById("btnCloseGasModal").addEventListener("click", function() {
-          document.getElementById("gasModal").style.display = "none";
-        });
-        document.getElementById("btnCancelGasModal").addEventListener("click", function() {
-          document.getElementById("gasModal").style.display = "none";
-        });
-        document.getElementById("btnResetGasUrl").addEventListener("click", function() {
-          try { localStorage.removeItem(GAS_URL_KEY); } catch (e) {}
-          document.getElementById("gasUrlInput").value = DEFAULT_GAS_URL;
-          showFeedback("success", "已恢復為預設的 Google Apps Script 部署網址。");
-        });
-        document.getElementById("btnSaveGasUrl").addEventListener("click", function() {
-          var val = document.getElementById("gasUrlInput").value.trim();
-          try {
-            if (val) localStorage.setItem(GAS_URL_KEY, val);
-            else localStorage.removeItem(GAS_URL_KEY);
-          } catch (e) {}
-          document.getElementById("gasModal").style.display = "none";
-          showFeedback("success", "已更新 Google Apps Script 連線網址設定。");
         });
 
         // Submit button
