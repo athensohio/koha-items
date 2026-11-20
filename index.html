@@ -1,772 +1,767 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="h-full bg-slate-50">
+<html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koha 圖書館系統導入 — 館藏段與代碼對照資料收集表</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Koha 圖書館系統導入 — 館藏段與代碼對照資料收集表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1d4ed8; background-color: #eff6ff; font-weight: 700; }
+    .input-base { width: 100%; border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.45rem 0.65rem; font-size: 0.875rem; transition: all 0.15s; background-color: #fff; }
+    .input-base:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+  </style>
 </head>
-<body class="h-full text-slate-800 flex flex-col font-sans selection:bg-brand-500 selection:text-white pb-24">
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-16">
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
-
-    <!-- Hidden Area for Clipboard Operations -->
-    <textarea id="clipboard-textarea" class="sr-only" aria-hidden="true"></textarea>
-
-    <!-- Header Navigation -->
-    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center text-white shadow-inner">
-                    <i class="fa-solid fa-layer-group text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight tracking-wide">Koha 圖書館系統導入對照收集表</h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">942 / 952 館藏段號與各項對照代碼填報系統</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-2.5">
-                <!-- Auto save badge -->
-                <div id="save-badge" class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="save-status-text">已自動存檔</span>
-                </div>
-
-                <!-- Settings Button -->
-                <button onclick="openGasModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5" title="設定 Google 試算表網址">
-                    <i class="fa-solid fa-gear text-brand-400"></i>
-                    <span class="hidden md:inline">Google 試算表設定</span>
-                </button>
-
-                <!-- Reset Button -->
-                <button onclick="confirmResetAll()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-rose-300 hover:bg-slate-800 transition flex items-center gap-1" title="清空所有填寫內容">
-                    <i class="fa-solid fa-rotate-left"></i>
-                    <span class="hidden sm:inline">清空重填</span>
-                </button>
-            </div>
+  <!-- Top Header -->
+  <header class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="bg-blue-500/30 border border-blue-300/40 text-xs px-2.5 py-0.5 rounded-full font-medium">Koha 系統資料介接</span>
+          <span id="saveStatusBadge" class="bg-emerald-500/20 border border-emerald-300/40 text-emerald-100 text-xs px-2.5 py-0.5 rounded-full">已啟用單機自動暫存</span>
         </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        <!-- Top Fixed Area: Unit & Contact Information -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-building-columns text-brand-600"></i>
-                    單位基本資訊 (固定項目)
-                </h2>
-                <span class="text-xs text-slate-400">請確認填報單位與填表人資訊正確</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Library Name -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">
-                        圖書館名稱 <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="info-lib-name" placeholder="範例：碩陽數位圖書館" oninput="autoSave()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition">
-                </div>
-
-                <!-- Library Code -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">
-                        圖書館代碼 <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="info-lib-code" placeholder="範例：SYDTLIB" oninput="autoSave()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition">
-                </div>
-
-                <!-- Submitter Staff ID -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1" title="我司可以用此代號找人">
-                        填表人代號 <span class="text-rose-500">*</span>
-                        <i class="fa-regular fa-circle-question text-slate-400 font-normal"></i>
-                    </label>
-                    <input type="text" id="info-staff-id" placeholder="範例：1037" oninput="autoSave()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition">
-                </div>
-
-                <!-- Submitter Email -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">
-                        填表人電子郵件信箱
-                    </label>
-                    <input type="email" id="info-staff-email" placeholder="example@lib.edu.tw" oninput="autoSave()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition">
-                </div>
-
-                <!-- Auto Date (Readonly) -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">
-                        填表日期 (系統產生)
-                    </label>
-                    <input type="text" id="info-fill-date" readonly class="w-full bg-slate-100 border border-slate-200 text-slate-500 font-mono rounded-lg px-3 py-2 text-xs cursor-not-allowed">
-                </div>
-            </div>
-        </section>
-
-        <!-- Navigation Tabs -->
-        <div class="border-b border-slate-200 bg-white rounded-t-xl px-2 pt-2 shadow-sm flex overflow-x-auto custom-scrollbar">
-            <button onclick="switchTab(1)" id="tab-btn-1" class="tab-button inline-flex items-center gap-2 py-3 px-4 border-b-2 font-bold text-xs whitespace-nowrap border-brand-600 text-brand-600">
-                <i class="fa-solid fa-list-check"></i>
-                【頁籤 1】942 / 952 館藏段對應
-                <span id="badge-tab-1" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-brand-100 text-brand-700">0/19</span>
-            </button>
-            <button onclick="switchTab(2)" id="tab-btn-2" class="tab-button inline-flex items-center gap-2 py-3 px-4 border-b-2 font-semibold text-xs whitespace-nowrap border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                <i class="fa-solid fa-sitemap"></i>
-                【頁籤 2】分館與排架位置
-                <span id="badge-tab-2" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600">0 列</span>
-            </button>
-            <button onclick="switchTab(3)" id="tab-btn-3" class="tab-button inline-flex items-center gap-2 py-3 px-4 border-b-2 font-semibold text-xs whitespace-nowrap border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                <i class="fa-solid fa-tags"></i>
-                【頁籤 3】館藏類型、特藏與分類法
-                <span id="badge-tab-3" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600">0 列</span>
-            </button>
-            <button onclick="switchTab(4)" id="tab-btn-4" class="tab-button inline-flex items-center gap-2 py-3 px-4 border-b-2 font-semibold text-xs whitespace-nowrap border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                <i class="fa-solid fa-users-gear"></i>
-                【頁籤 4】讀者類型、狀態與館方特有
-                <span id="badge-tab-4" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600">0 列</span>
-            </button>
-        </div>
-
-        <!-- TAB CONTENT 1: 942/952 Fixed Fields Mapping -->
-        <section id="tab-content-1" class="tab-content bg-white rounded-b-xl shadow-sm border border-t-0 border-slate-200/80 p-5 space-y-4">
-            <div class="bg-amber-50 border border-amber-200/80 rounded-lg p-3.5 text-xs text-amber-800 flex items-start gap-2.5">
-                <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                <div>
-                    <strong>填寫說明：</strong>請針對下列 Koha 預設 19 個館藏欄位，填寫貴館目前舊圖書館系統所使用的「對應段號/分欄/欄位名稱」以及「貴館實際資料範例」。灰色標籤為標準建議參考範例。
-                </div>
-            </div>
-
-            <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
-                        <tr>
-                            <th scope="col" class="py-3 px-4 w-1/4">預設目標欄位 (Tag & Subfield)</th>
-                            <th scope="col" class="py-3 px-4 w-1/4">原系統對應段號 / 分欄</th>
-                            <th scope="col" class="py-3 px-4 w-1/4">貴館實際資料範例</th>
-                            <th scope="col" class="py-3 px-4 w-1/4">轉換規則 / 備註</th>
-                        </tr>
-                    </thead>
-                    <tbody id="marc-fields-tbody" class="divide-y divide-slate-200 bg-white">
-                        <!-- Dynamic rendering of 19 MARC fields -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- TAB CONTENT 2: Libraries & Shelving Locations -->
-        <section id="tab-content-2" class="tab-content hidden space-y-6">
-            
-            <!-- Table 2A: 952$a / 952$b Library Names & Codes -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-xs">952$a / 952$b</span>
-                            館藏所屬與所在圖書館（分館對照）
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：總館、資訊分館、醫學圖書館及其對應簡稱代碼</p>
-                    </div>
-                    <button onclick="addRow('table-branches')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">圖書館名稱</th>
-                                <th scope="col" class="py-3 px-4">對應代碼 (Code)</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-branches-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 2B: 952$c Shelving Location -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-xs">952$c</span>
-                            排架位置對照
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：3F中文圖書區、館員櫃檯 SD、參考書區等</p>
-                    </div>
-                    <button onclick="addRow('table-locations')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">排架位置</th>
-                                <th scope="col" class="py-3 px-4">對應代碼 (Code)</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-locations-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- TAB CONTENT 3: Item Types, Shelving & Classification -->
-        <section id="tab-content-3" class="tab-content hidden space-y-6">
-            
-            <!-- Table 3A: 942$c / 952$y Item Types -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-xs">942$c / 952$y</span>
-                            館藏類型對照 (Item Types)
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：BK 圖書、AV 視聽資料、SER 期刊等，以及是否開放外借</p>
-                    </div>
-                    <button onclick="addRow('table-itypes')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">館藏類型名稱</th>
-                                <th scope="col" class="py-3 px-4">代碼</th>
-                                <th scope="col" class="py-3 px-4 w-32 text-center">可外借</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-itypes-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 3B: 952$8 Collection Code -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-xs">952$8</span>
-                            特藏號對照 (Collection Code)
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：科幻 SIFI、珍本特藏、罕用書庫等</p>
-                    </div>
-                    <button onclick="addRow('table-ccodes')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">特藏號名稱</th>
-                                <th scope="col" class="py-3 px-4">代碼</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-ccodes-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 3C: 942$2 / 952$2 Classification Source -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-xs">942$2 / 952$2</span>
-                            分類法來源對照 (Classification Scheme)
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：ccL 中文圖書分類法、ddc 杜威分類法、lcc 美國國會圖書館分類法</p>
-                    </div>
-                    <button onclick="addRow('table-class-schemes')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">分類法來源名稱</th>
-                                <th scope="col" class="py-3 px-4">代碼</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-class-schemes-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- TAB CONTENT 4: Borrower Categories, Status & Custom -->
-        <section id="tab-content-4" class="tab-content hidden space-y-6">
-            
-            <!-- Table 4A: Borrower Categories -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-id-card text-brand-600"></i>
-                            讀者類型對照 (Patron Categories)
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：大學生、研究生、教職員、推廣學員等</p>
-                    </div>
-                    <button onclick="addRow('table-patrons')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">讀者類型名稱</th>
-                                <th scope="col" class="py-3 px-4">對應代碼</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-patrons-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 4B: Item Statuses -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
-                            館藏狀態對照 (若有特殊需求)
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">例如：在架、外借中、報銷、修補中等特殊狀態</p>
-                    </div>
-                    <button onclick="addRow('table-statuses')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">中文狀態描述</th>
-                                <th scope="col" class="py-3 px-4">對應代碼</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-statuses-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 4C: Library Specific Custom Fields -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-puzzle-piece text-brand-600"></i>
-                            館方特有自訂欄位對照
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">若舊系統有非 MARC 標準之特殊註記欄位，請於此處補充</p>
-                    </div>
-                    <button onclick="addRow('table-customs')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm transition">
-                        <i class="fa-solid fa-plus"></i> 新增一列
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left text-xs text-slate-700">
-                        <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="py-3 px-4 w-12 text-center">#</th>
-                                <th scope="col" class="py-3 px-4">欄位/資料名稱</th>
-                                <th scope="col" class="py-3 px-4">代碼 / 說明</th>
-                                <th scope="col" class="py-3 px-4 w-16 text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-customs-tbody" class="divide-y divide-slate-200 bg-white">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- Fixed Bottom Action Bar -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 py-3.5 px-4 z-40 shadow-xl">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-            
-            <div class="flex items-center gap-3 text-xs text-slate-300">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <span>系統已開啟單機自動暫存</span>
-                <span class="text-slate-600">|</span>
-                <span id="footer-completion-summary" class="text-slate-400">總計已填寫 0 項資料</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button onclick="openPreviewModal()" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2">
-                    <i class="fa-solid fa-eye text-brand-400"></i> 預覽送出資料
-                </button>
-                <button onclick="submitToGoogleSheets()" class="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> 確認送出至 Google 試算表
-                </button>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Google Apps Script Settings & Deployment Modal -->
-    <div id="gas-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-brand-400"></i>
-                    Google Apps Script (GAS) 接收端設定與教學
-                </h3>
-                <button onclick="closeGasModal()" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-            </div>
-
-            <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 custom-scrollbar">
-                
-                <!-- URL Config Input -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
-                    <label class="block font-bold text-slate-800">
-                        目前設定的 Google Apps Script Web App URL：
-                    </label>
-                    <div class="flex gap-2">
-                        <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                        <button onclick="saveGasUrl()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition">
-                            儲存設定
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-slate-500">提示：系統管理者亦可直接編輯本 HTML 檔案第 450 行的 <code class="bg-slate-200 px-1 py-0.5 rounded">DEFAULT_GAS_URL</code> 常數直接寫死。</p>
-                </div>
-
-                <!-- 4 Step Deployment Guide -->
-                <div class="space-y-3">
-                    <h4 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-list-ol text-brand-600"></i>
-                        4 步驟快速建立接收端 Google 試算表：
-                    </h4>
-                    
-                    <ol class="list-decimal list-inside space-y-2 leading-relaxed text-slate-600 pl-1">
-                        <li>開啟一張全新的 <strong>Google 試算表</strong>。</li>
-                        <li>點選上方選單 <strong>「擴充功能」 &gt; 「Apps Script」</strong>。</li>
-                        <li>將下方的程式碼完全覆蓋貼入專案中，並點選右上方 <strong>「部署」 &gt; 「新增部署」</strong>。</li>
-                        <li>種類選擇 <strong>「網頁應用程式」</strong>，將執行身份設為「我」，誰有存取權限設為 <strong>「任何人 (Anyone)」</strong>，最後點擊部署並複製取得的 Web App URL。</li>
-                    </ol>
-                </div>
-
-                <!-- Apps Script Code Box -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-800">Google Apps Script 接收端獨立程式碼：</span>
-                        <button onclick="copyGasCode()" class="text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
-                            <i class="fa-regular fa-copy"></i> 複製 GAS 程式碼
-                        </button>
-                    </div>
-                    <pre id="gas-code-block" class="bg-slate-900 text-slate-200 p-4 rounded-lg font-mono text-[11px] overflow-x-auto custom-scrollbar select-all leading-relaxed">
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // 建立主工作表
-    var sheetName = (data.unitInfo.libName || "對照表寫入") + "_" + data.unitInfo.staffId;
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-    } else {
-      sheet.clear(); // 若重複送出則覆蓋
-    }
-    
-    // 1. 寫入單位基本資訊
-    sheet.appendRow(["【單位基本資訊】"]);
-    sheet.appendRow(["圖書館名稱", data.unitInfo.libName]);
-    sheet.appendRow(["圖書館代碼", data.unitInfo.libCode]);
-    sheet.appendRow(["填表人代號", data.unitInfo.staffId]);
-    sheet.appendRow(["電子郵件", data.unitInfo.staffEmail]);
-    sheet.appendRow(["填表日期", data.unitInfo.fillDate]);
-    sheet.appendRow([]);
-    
-    // 2. 寫入 942/952 館藏段對應
-    sheet.appendRow(["【942 / 952 館藏段對應表】"]);
-    sheet.appendRow(["標題 Tag/Subfield", "原系統對應段號", "實際資料範例", "備註"]);
-    data.marcFields.forEach(function(row) {
-      sheet.appendRow([row.label, row.source, row.sample, row.note]);
-    });
-    sheet.appendRow([]);
-    
-    // 3. 寫入各項對照代碼表
-    function appendTable(title, headers, rows) {
-      sheet.appendRow(["【" + title + "】"]);
-      sheet.appendRow(headers);
-      rows.forEach(function(r) {
-        var rowArr = [];
-        headers.forEach(function(h, idx) {
-          rowArr.push(r["col" + idx] || "");
-        });
-        sheet.appendRow(rowArr);
-      });
-      sheet.appendRow([]);
-    }
-    
-    appendTable("952$a/b 分館對照", ["圖書館名稱", "代碼"], data.tables.branches);
-    appendTable("952$c 排架位置對照", ["排架位置", "代碼"], data.tables.locations);
-    appendTable("942$c/952$y 館藏類型對照", ["館藏類型", "代碼", "可外借"], data.tables.itypes);
-    appendTable("952$8 特藏號對照", ["特藏號名稱", "代碼"], data.tables.ccodes);
-    appendTable("942$2/952$2 分類法對照", ["分類法名稱", "代碼"], data.tables.classSchemes);
-    appendTable("讀者類型對照", ["讀者類型名稱", "代碼"], data.tables.patrons);
-    appendTable("館藏狀態對照", ["中文描述", "代碼"], data.tables.statuses);
-    appendTable("館方特有欄位", ["欄位名稱", "說明代碼"], data.tables.customs);
-    
-    return ContentService.createTextOutput(JSON.stringify({"result": "success"}))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({"result": "error", "message": err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}</pre>
-                </div>
-            </div>
-
-            <div class="p-4 bg-slate-100 border-t border-slate-200 flex justify-end">
-                <button onclick="closeGasModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg transition">
-                    關閉視窗
-                </button>
-            </div>
-        </div>
+        <h1 class="text-xl md:text-2xl font-bold mt-1.5 tracking-tight">館藏段 (942 / 952) 與各項代碼對照資料收集表</h1>
+        <p class="text-blue-200 text-xs md:text-sm mt-1">請依貴館目前系統實際使用的欄位與代碼填寫，輸入內容將自動暫存於本機瀏覽器，可分多日填寫完成後再一鍵送出。</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 shrink-0">
+        <button type="button" onclick="toggleGasModal(true)" class="bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+          <span>⚙️ 試算表連線設定</span>
+        </button>
+        <button type="button" onclick="toggleClearConfirm(true)" class="bg-rose-500/80 hover:bg-rose-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg transition">
+          清空重填
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Custom Confirm Reset Modal -->
-    <div id="reset-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-                    確認清空重填
-                </h3>
-                <button onclick="closeResetModal()" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-            </div>
-            <div class="p-5 text-xs text-slate-600 leading-relaxed">
-                確定要清空所有已填寫的對照資料與瀏覽器暫存內容嗎？此動作無法復原。
-            </div>
-            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
-                <button onclick="closeResetModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition text-xs">
-                    取消
-                </button>
-                <button onclick="executeResetAll()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition text-xs">
-                    確定清空
-                </button>
-            </div>
-        </div>
+  <!-- Inline Clear Confirm Banner -->
+  <div id="clearConfirmBar" class="hidden bg-rose-50 border-b border-rose-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="text-sm text-rose-800 font-medium">
+        ⚠️ 確定要清除本機暫存的所有填寫資料並恢復預設空白狀態嗎？此動作無法復原。
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" onclick="executeClearAll()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-md">確定全部清空</button>
+        <button type="button" onclick="toggleClearConfirm(false)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-medium px-3.5 py-1.5 rounded-md">取消</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Application Script -->
-    <script>
-        /**
-         * HTML Escape Utility
-         */
-        function escapeHtml(unsafe) {
-            if (unsafe === null || unsafe === undefined) return '';
-            return String(unsafe)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+  <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
-        /**
-         * Global Configuration & State
-         */
-        // System Administrator Default GAS URL (Can be hardcoded here)
-        const DEFAULT_GAS_URL = ""; 
+    <!-- Fixed Unit Info Card -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <span class="w-2 h-5 bg-blue-600 rounded-full inline-block"></span>
+          一、單位基本資訊（必填）
+        </h2>
+        <span class="text-xs text-slate-500">填表日期由系統自動產生</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">圖書館名稱 <span class="text-rose-500">*</span></label>
+          <input type="text" id="info_libName" class="input-base" placeholder="例：碩陽數位圖書館" oninput="handleInfoChange()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">圖書館代碼 <span class="text-rose-500">*</span></label>
+          <input type="text" id="info_libCode" class="input-base" placeholder="例：SYDTLIB" oninput="handleInfoChange()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">填表人代號 <span class="text-rose-500">*</span></label>
+          <input type="text" id="info_staffId" class="input-base" placeholder="例：1037（方便我司聯繫）" oninput="handleInfoChange()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">填表人電子郵件信箱 <span class="text-rose-500">*</span></label>
+          <input type="email" id="info_email" class="input-base" placeholder="name@library.edu.tw" oninput="handleInfoChange()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">填表日期（系統自動產生）</label>
+          <input type="text" id="info_submitDate" class="input-base bg-slate-100 text-slate-600 cursor-not-allowed" readonly />
+        </div>
+      </div>
+    </section>
 
-        const LOCAL_STORAGE_KEY = "koha_mapping_form_v2";
-        const GAS_URL_KEY = "koha_mapping_gas_url";
+    <!-- Navigation Tabs -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="flex overflow-x-auto border-b border-slate-200 bg-slate-50/70">
+        <button type="button" id="tabBtn_0" onclick="switchTab(0)" class="tab-btn active px-5 py-3.5 text-sm whitespace-nowrap transition flex items-center gap-2">
+          <span>1. 942 / 952 館藏段對應</span>
+          <span id="badge_tab0" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">0/19</span>
+        </button>
+        <button type="button" id="tabBtn_1" onclick="switchTab(1)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+          <span>2. 分館與排架位置</span>
+          <span id="badge_tab1" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
+        </button>
+        <button type="button" id="tabBtn_2" onclick="switchTab(2)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+          <span>3. 館藏類型、特藏與分類法</span>
+          <span id="badge_tab2" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
+        </button>
+        <button type="button" id="tabBtn_3" onclick="switchTab(3)" class="tab-btn px-5 py-3.5 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition flex items-center gap-2">
+          <span>4. 讀者類型、狀態與館方特有</span>
+          <span id="badge_tab3" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 筆</span>
+        </button>
+      </div>
 
-        // 19 MARC Fields as per ODS specification
-        const defaultMarcFields = [
-            { id: "942_2", tag: "942$2", name: "分類號來源同952$2", example: "ccL 中文圖書分類法" },
-            { id: "942_c", tag: "942$c", name: "館藏類型同952$y", example: "BK 圖書" },
-            { id: "952_2", tag: "952$2", name: "分類法來源", example: "ccL 中文圖書分類法" },
-            { id: "952_3", tag: "952$3", name: "附加資訊", example: "附光碟一張" },
-            { id: "952_8", tag: "952$8", name: "特藏號", example: "科幻 SIFI" },
-            { id: "952_a", tag: "952$a", name: "館藏所屬圖書館", example: "SYDTLIB" },
-            { id: "952_b", tag: "952$b", name: "館藏所在圖書館", example: "SYDTLIB" },
-            { id: "952_c", tag: "952$c", name: "排架位置", example: "館員櫃檯 SD" },
-            { id: "952_d", tag: "952$d", name: "到館日期", example: "46346 或 YYYY-MM-DD" },
-            { id: "952_e", tag: "952$e", name: "來源", example: "贈送" },
-            { id: "952_h", tag: "952$h", name: "部冊/卷期", example: "" },
-            { id: "952_i", tag: "952$i", name: "登錄號", example: "" },
-            { id: "952_g", tag: "952$g", name: "成本", example: "" },
-            { id: "952_o", tag: "952$o", name: "索書號", example: "" },
-            { id: "952_p", tag: "952$p", name: "條碼號", example: "" },
-            { id: "952_t", tag: "952$t", name: "複本號", example: "" },
-            { id: "952_x", tag: "952$x", name: "非公開註", example: "" },
-            { id: "952_y", tag: "952$y", name: "館藏類型", example: "" },
-            { id: "952_z", tag: "952$z", name: "公開說明", example: "" }
-        ];
+      <!-- TAB 0: 942 & 952 MARC Fields -->
+      <div id="tabPanel_0" class="p-5">
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">942 / 952 館藏段欄位對應與範例</h3>
+            <p class="text-xs text-slate-500 mt-0.5">請填寫貴館原系統對應的段號/分欄（如 805$c、950$a 或資料庫欄位名稱）與一筆實際範例資料。</p>
+          </div>
+          <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg">💡 若無使用該欄位可留空不填</span>
+        </div>
+        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 text-xs uppercase border-b border-slate-200">
+                <th class="py-3 px-3 w-28">Koha 欄位</th>
+                <th class="py-3 px-3 w-44">預設欄位名稱</th>
+                <th class="py-3 px-3 w-48">參考範例</th>
+                <th class="py-3 px-3 w-48">原系統對應段號/分欄</th>
+                <th class="py-3 px-3 w-56">貴館實際資料範例</th>
+                <th class="py-3 px-3">轉換規則 / 備註</th>
+              </tr>
+            </thead>
+            <tbody id="marcTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
 
-        // Dynamic Table Configurations
-        const dynamicTablesConfig = {
-            'branches': { tbodyId: 'table-branches-tbody', cols: 2, placeholders: ['圖書館名稱 (如：總館)', '代碼 (如：MAIN)'] },
-            'locations': { tbodyId: 'table-locations-tbody', cols: 2, placeholders: ['排架位置 (如：3F中文圖書區)', '代碼 (如：3F_ZH)'] },
-            'itypes': { tbodyId: 'table-itypes-tbody', cols: 3, type: 'itype', placeholders: ['館藏類型 (如：BK 圖書)', '代碼 (如：BK)'] },
-            'ccodes': { tbodyId: 'table-ccodes-tbody', cols: 2, placeholders: ['特藏號名稱 (如：科幻特藏)', '代碼 (如：SIFI)'] },
-            'classSchemes': { tbodyId: 'table-class-schemes-tbody', cols: 2, placeholders: ['分類法來源 (如：中文圖書分類法)', '代碼 (如：ccl)'] },
-            'patrons': { tbodyId: 'table-patrons-tbody', cols: 2, placeholders: ['讀者類型 (如：大學生)', '代碼 (如：UNDERGRAD)'] },
-            'statuses': { tbodyId: 'table-statuses-tbody', cols: 2, placeholders: ['中文狀態 (如：報銷)', '代碼 (如：DISCARDED)'] },
-            'customs': { tbodyId: 'table-customs-tbody', cols: 2, placeholders: ['館方欄位名稱', '對應代碼或說明'] }
-        };
+      <!-- TAB 1: Branches & Shelving Locations -->
+      <div id="tabPanel_1" class="hidden p-5 space-y-8">
+        <!-- 952$a / 952$b -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">952$a / 952$b — 圖書館名稱與分館代碼對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">若貴館有多個分館或總館，請逐筆列出分館名稱與對應代碼（例如：碩陽數位圖書館 / SYDTLIB）。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('branches')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增分館</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">圖書館 / 分館名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_branches" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
 
-        /**
-         * Reset All Confirmation (Custom Modal)
-         */
-        function confirmResetAll() {
-            document.getElementById('reset-modal').classList.remove('hidden');
-        }
+        <!-- 952$c -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">952$c — 排架位置對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館內各書庫、閱覽室或排架區域名稱與代碼（例如：館員櫃檯 / SD）。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('locations')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增排架位置</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">排架位置名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_locations" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-        function closeResetModal() {
-            document.getElementById('reset-modal').classList.add('hidden');
-        }
+      <!-- TAB 2: Item Types, Collections, Classification Sources -->
+      <div id="tabPanel_2" class="hidden p-5 space-y-8">
+        <!-- 942$c / 952$y -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">942$c / 952$y — 館藏類型對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館藏類型名稱、代碼及是否開放外借（例如：圖書 / BK / 可外借）。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('itemTypes')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館藏類型</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">館藏類型名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-32 text-center">可外借</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_itemTypes" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
 
-        function executeResetAll() {
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-            document.getElementById('info-lib-name').value = '';
-            document.getElementById('info-lib-code').value = '';
-            document.getElementById('info-staff-id').value = '';
-            document.getElementById('info-staff-email').value = '';
+        <!-- 952$8 -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">952$8 — 特藏號對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">若有特藏區分（例如：科幻 / SIFI），請列出名稱與代碼。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('collections')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增特藏號</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">特藏號名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_collections" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
 
-            renderMarcFieldsTable();
-            initDynamicTables();
-            updateCompletionStats();
-            closeResetModal();
-            showToast('已重置所有內容。', 'info');
-        }
+        <!-- 942$2 / 952$2 -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">942$2 / 952$2 — 分類法來源對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館內使用的分類法名稱與代碼（例如：中文圖書分類法 / ccL）。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('classSources')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增分類法來源</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">分類法來源名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_classSources" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-        /**
-         * Toast Helper
-         */
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            let bgClass = 'bg-slate-900 text-white';
-            let iconClass = 'fa-circle-info text-brand-400';
+      <!-- TAB 3: Patron Types, Item Statuses, Custom Fields -->
+      <div id="tabPanel_3" class="hidden p-5 space-y-8">
+        <!-- Patron Types -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">讀者類型對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">請列出貴館的讀者身分別與對應代碼（例如：教職員 / STAFF、學生 / STU）。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('patronTypes')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增讀者類型</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">讀者類型名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_patronTypes" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
 
-            if (type === 'success') {
-                bgClass = 'bg-slate-900 text-white border border-emerald-500/40';
-                iconClass = 'fa-circle-check text-emerald-400';
-            } else if (type === 'error') {
-                bgClass = 'bg-slate-900 text-white border border-rose-500/40';
-                iconClass = 'fa-circle-xmark text-rose-400';
+        <!-- Item Statuses -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">館藏狀態對照（若有需要）</h3>
+              <p class="text-xs text-slate-500 mt-0.5">例如遺失、破損、編目中、裝訂中等特殊館藏狀態名稱與代碼。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('itemStatuses')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館藏狀態</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">館藏狀態（中文）</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_itemStatuses" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Custom Fields -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">館方特有欄位 / 代碼對照</h3>
+              <p class="text-xs text-slate-500 mt-0.5">其他需一併轉檔的館方自訂欄位或特殊代碼。</p>
+            </div>
+            <button type="button" onclick="addDynamicRow('customFields')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">+ 新增館方特有項目</button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
+                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3">名稱</th>
+                  <th class="py-2.5 px-3">代碼</th>
+                  <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_customFields" class="divide-y divide-slate-200 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submit Action Bar -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-sm text-slate-600">
+        <p class="font-semibold text-slate-800">確認所有頁籤資料皆填寫完畢後，請點擊右側按鈕送出：</p>
+        <p class="text-xs text-slate-500 mt-0.5">資料將直接寫入專案 Google 試算表，送出後本機仍會保留您的填寫紀錄供日後查閱。</p>
+      </div>
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <button type="button" id="submitBtn" onclick="submitToGoogleSheets()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+          <span>確認送出至 Google 試算表</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Status / Feedback Alert Box -->
+    <div id="feedbackBox" class="hidden rounded-xl p-4 border text-sm"></div>
+
+  </main>
+
+  <!-- GAS Settings Modal -->
+  <div id="gasModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-lg font-bold text-slate-800">Google 試算表接收端設定 (Apps Script)</h3>
+        <button type="button" onclick="toggleGasModal(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+      </div>
+      <div class="space-y-3 text-sm text-slate-600">
+        <p>目前網頁已預設綁定您的 Google Apps Script 接收端網址，若日後有更換新的試算表部署網址，可在此修改並儲存：</p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Google Apps Script 網頁應用程式網址 (.exec)</label>
+          <input type="url" id="gasUrlInput" class="input-base font-mono text-xs" placeholder="https://script.google.com/macros/s/.../exec" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="resetDefaultGasUrl()" class="text-xs text-slate-500 hover:text-slate-800 underline mr-auto">恢復預設網址</button>
+          <button type="button" onclick="toggleGasModal(false)" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold">取消</button>
+          <button type="button" onclick="saveGasUrl()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">儲存設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 預設 Google Apps Script 網頁應用程式網址（已為您直接填入專屬部署網址）
+    // =========================================================================
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx13odihO7S0nd1dzWlBl6gGDxLTpePay-FoSBLD9pl1cD3snFlIyAEjK504zf9K-Lt/exec";
+    const STORAGE_KEY = "koha_mapping_form_v1";
+    const GAS_URL_KEY = "koha_mapping_gas_url_v1";
+
+    // 預設 942 / 952 欄位清單（完整對應 線上對應.ods）
+    const MARC_DEFINITIONS = [
+      { kohaTag: "942$2", label: "分類號來源同952$2", exampleHint: "ccL 中文圖書分類法" },
+      { kohaTag: "942$c", label: "館藏類型同952$y", exampleHint: "BK 圖書" },
+      { kohaTag: "952$2", label: "分類法來源", exampleHint: "ccL 中文圖書分類法" },
+      { kohaTag: "952$3", label: "附加資訊", exampleHint: "附光碟一張" },
+      { kohaTag: "952$8", label: "特藏號", exampleHint: "科幻 SIFI" },
+      { kohaTag: "952$a", label: "館藏所屬圖書館", exampleHint: "SYDTLIB" },
+      { kohaTag: "952$b", label: "館藏所在圖書館", exampleHint: "SYDTLIB" },
+      { kohaTag: "952$c", label: "排架位置", exampleHint: "館員櫃檯 SD" },
+      { kohaTag: "952$d", label: "到館日期", exampleHint: "2026-11-20 (或系統日期格式)" },
+      { kohaTag: "952$e", label: "來源", exampleHint: "贈送 / 採購" },
+      { kohaTag: "952$h", label: "部冊/卷期", exampleHint: "v.1 / 第2冊" },
+      { kohaTag: "952$i", label: "登錄號", exampleHint: "0012345" },
+      { kohaTag: "952$g", label: "成本", exampleHint: "350" },
+      { kohaTag: "952$o", label: "索書號", exampleHint: "857.7 4423" },
+      { kohaTag: "952$p", label: "條碼號", exampleHint: "B00012345" },
+      { kohaTag: "952$t", label: "複本號", exampleHint: "c.2" },
+      { kohaTag: "952$x", label: "非公開註", exampleHint: "館員內部備註" },
+      { kohaTag: "952$y", label: "館藏類型", exampleHint: "BK 圖書" },
+      { kohaTag: "952$z", label: "公開說明", exampleHint: "書況良好" }
+    ];
+
+    const DYNAMIC_CATEGORIES = ["branches", "locations", "itemTypes", "collections", "classSources", "patronTypes", "itemStatuses", "customFields"];
+
+    let formState = getInitialState();
+
+    function getTodayString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function getInitialState() {
+      return {
+        info: {
+          libName: "",
+          libCode: "",
+          staffId: "",
+          email: "",
+          submitDate: getTodayString()
+        },
+        marcFields: MARC_DEFINITIONS.map(def => ({
+          kohaTag: def.kohaTag,
+          label: def.label,
+          sourceTag: "",
+          example: "",
+          note: ""
+        })),
+        branches: [{ name: "", code: "" }],
+        locations: [{ name: "", code: "" }],
+        itemTypes: [{ name: "", code: "", loanable: true }],
+        collections: [{ name: "", code: "" }],
+        classSources: [{ name: "", code: "" }],
+        patronTypes: [{ name: "", code: "" }],
+        itemStatuses: [{ name: "", code: "" }],
+        customFields: [{ name: "", code: "" }]
+      };
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // Safe localStorage helpers
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          formState = Object.assign(getInitialState(), parsed);
+          formState.info.submitDate = getTodayString();
+          // Ensure marcFields length aligns with MARC_DEFINITIONS
+          formState.marcFields = MARC_DEFINITIONS.map((def, idx) => {
+            const existing = (parsed.marcFields && parsed.marcFields[idx]) || {};
+            return {
+              kohaTag: def.kohaTag,
+              label: def.label,
+              sourceTag: existing.sourceTag || "",
+              example: existing.example || "",
+              note: existing.note || ""
+            };
+          });
+          DYNAMIC_CATEGORIES.forEach(cat => {
+            if (!Array.isArray(formState[cat]) || formState[cat].length === 0) {
+              formState[cat] = cat === "itemTypes" ? [{ name: "", code: "", loanable: true }] : [{ name: "", code: "" }];
             }
-
-            toast.className = `pointer-events-auto flex items-center justify-between p-3.5 rounded-lg shadow-xl text-xs font-semibold ${bgClass} transition-all duration-300 transform translate-y-2 opacity-0`;
-            toast.innerHTML = `
-                <div class="flex items-center gap-2.5">
-                    <i class="fa-solid ${iconClass} text-base"></i>
-                    <span>${message}</span>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white ml-4">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            `;
-
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+          });
         }
-    </script>
+      } catch (e) {
+        console.warn("Local storage read skipped:", e);
+      }
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formState));
+        const now = new Date();
+        const timeStr = now.toTimeString().split(" ")[0];
+        const badge = document.getElementById("saveStatusBadge");
+        if (badge) badge.textContent = `已自動暫存於 ${timeStr}`;
+      } catch (e) {
+        console.warn("Local storage write skipped:", e);
+      }
+      updateTabBadges();
+    }
+
+    function getActiveGasUrl() {
+      try {
+        const saved = localStorage.getItem(GAS_URL_KEY);
+        if (saved && saved.trim()) return saved.trim();
+      } catch (e) {}
+      return DEFAULT_GAS_URL;
+    }
+
+    // Render all UI
+    function renderAll() {
+      document.getElementById("info_libName").value = formState.info.libName || "";
+      document.getElementById("info_libCode").value = formState.info.libCode || "";
+      document.getElementById("info_staffId").value = formState.info.staffId || "";
+      document.getElementById("info_email").value = formState.info.email || "";
+      document.getElementById("info_submitDate").value = formState.info.submitDate || getTodayString();
+
+      renderMarcTable();
+      DYNAMIC_CATEGORIES.forEach(cat => renderDynamicTable(cat));
+      updateTabBadges();
+    }
+
+    function renderMarcTable() {
+      const tbody = document.getElementById("marcTableBody");
+      tbody.innerHTML = MARC_DEFINITIONS.map((def, idx) => {
+        const row = formState.marcFields[idx] || { sourceTag: "", example: "", note: "" };
+        return `
+          <tr class="hover:bg-blue-50/40 transition">
+            <td class="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">${escapeHtml(def.kohaTag)}</td>
+            <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(def.label)}</td>
+            <td class="py-2.5 px-3">
+              <span class="inline-block bg-amber-50 text-amber-800 border border-amber-200/80 text-xs px-2 py-0.5 rounded">${escapeHtml(def.exampleHint)}</span>
+            </td>
+            <td class="py-2 px-3">
+              <input type="text" class="input-base" placeholder="如：805$c 或無" value="${escapeHtml(row.sourceTag)}" oninput="updateMarcField(${idx}, 'sourceTag', this.value)" />
+            </td>
+            <td class="py-2 px-3">
+              <input type="text" class="input-base" placeholder="請填貴館實際範例" value="${escapeHtml(row.example)}" oninput="updateMarcField(${idx}, 'example', this.value)" />
+            </td>
+            <td class="py-2 px-3">
+              <input type="text" class="input-base" placeholder="備註或特殊規則" value="${escapeHtml(row.note)}" oninput="updateMarcField(${idx}, 'note', this.value)" />
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderDynamicTable(category) {
+      const tbody = document.getElementById(`tbody_${category}`);
+      const rows = formState[category] || [];
+      const isItemType = category === "itemTypes";
+
+      tbody.innerHTML = rows.map((row, idx) => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 px-3 text-center text-xs text-slate-400 font-mono">${idx + 1}</td>
+          <td class="py-2 px-3">
+            <input type="text" class="input-base" placeholder="請輸入名稱" value="${escapeHtml(row.name)}" oninput="updateDynamicField('${category}', ${idx}, 'name', this.value)" />
+          </td>
+          <td class="py-2 px-3">
+            <input type="text" class="input-base font-mono" placeholder="請輸入代碼" value="${escapeHtml(row.code)}" oninput="updateDynamicField('${category}', ${idx}, 'code', this.value)" />
+          </td>
+          ${isItemType ? `
+          <td class="py-2 px-3 text-center">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300" ${row.loanable ? "checked" : ""} onchange="updateDynamicField('${category}', ${idx}, 'loanable', this.checked)" />
+              <span class="text-xs text-slate-700">${row.loanable ? "可外借" : "限館內"}</span>
+            </label>
+          </td>
+          ` : ""}
+          <td class="py-2 px-3 text-center">
+            <button type="button" onclick="removeDynamicRow('${category}', ${idx})" class="text-rose-500 hover:text-rose-700 text-xs font-medium px-2 py-1 rounded hover:bg-rose-50" title="刪除此列">刪除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Event handlers
+    function handleInfoChange() {
+      formState.info.libName = document.getElementById("info_libName").value;
+      formState.info.libCode = document.getElementById("info_libCode").value;
+      formState.info.staffId = document.getElementById("info_staffId").value;
+      formState.info.email = document.getElementById("info_email").value;
+      saveToStorage();
+    }
+
+    function updateMarcField(idx, field, value) {
+      formState.marcFields[idx][field] = value;
+      saveToStorage();
+    }
+
+    function updateDynamicField(category, idx, field, value) {
+      formState[category][idx][field] = value;
+      if (category === "itemTypes" && field === "loanable") {
+        renderDynamicTable(category);
+      }
+      saveToStorage();
+    }
+
+    function addDynamicRow(category) {
+      const newRow = category === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+      formState[category].push(newRow);
+      renderDynamicTable(category);
+      saveToStorage();
+    }
+
+    function removeDynamicRow(category, idx) {
+      if (formState[category].length <= 1) {
+        formState[category][0] = category === "itemTypes" ? { name: "", code: "", loanable: true } : { name: "", code: "" };
+      } else {
+        formState[category].splice(idx, 1);
+      }
+      renderDynamicTable(category);
+      saveToStorage();
+    }
+
+    function switchTab(tabIndex) {
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`tabBtn_${i}`);
+        const panel = document.getElementById(`tabPanel_${i}`);
+        if (i === tabIndex) {
+          btn.classList.add("active");
+          btn.classList.remove("text-slate-600");
+          panel.classList.remove("hidden");
+        } else {
+          btn.classList.remove("active");
+          btn.classList.add("text-slate-600");
+          panel.classList.add("hidden");
+        }
+      }
+    }
+
+    function updateTabBadges() {
+      const filledMarc = formState.marcFields.filter(r => (r.sourceTag && r.sourceTag.trim()) || (r.example && r.example.trim()) || (r.note && r.note.trim())).length;
+      document.getElementById("badge_tab0").textContent = `${filledMarc}/${MARC_DEFINITIONS.length}`;
+
+      const countRows = (cats) => cats.reduce((sum, cat) => {
+        return sum + (formState[cat] || []).filter(r => (r.name && r.name.trim()) || (r.code && r.code.trim())).length;
+      }, 0);
+
+      document.getElementById("badge_tab1").textContent = `${countRows(["branches", "locations"])} 筆`;
+      document.getElementById("badge_tab2").textContent = `${countRows(["itemTypes", "collections", "classSources"])} 筆`;
+      document.getElementById("badge_tab3").textContent = `${countRows(["patronTypes", "itemStatuses", "customFields"])} 筆`;
+    }
+
+    // Clear confirmation
+    function toggleClearConfirm(show) {
+      const bar = document.getElementById("clearConfirmBar");
+      if (show) bar.classList.remove("hidden");
+      else bar.classList.add("hidden");
+    }
+
+    function executeClearAll() {
+      formState = getInitialState();
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      renderAll();
+      toggleClearConfirm(false);
+      showFeedback("success", "已清空所有欄位並恢復為預設狀態。");
+    }
+
+    // GAS Modal controls
+    function toggleGasModal(show) {
+      const modal = document.getElementById("gasModal");
+      if (show) {
+        document.getElementById("gasUrlInput").value = getActiveGasUrl();
+        modal.classList.remove("hidden");
+      } else {
+        modal.classList.add("hidden");
+      }
+    }
+
+    function saveGasUrl() {
+      const val = document.getElementById("gasUrlInput").value.trim();
+      try {
+        if (val) localStorage.setItem(GAS_URL_KEY, val);
+        else localStorage.removeItem(GAS_URL_KEY);
+      } catch (e) {}
+      toggleGasModal(false);
+      showFeedback("success", "已更新 Google Apps Script 連線網址設定。");
+    }
+
+    function resetDefaultGasUrl() {
+      try { localStorage.removeItem(GAS_URL_KEY); } catch (e) {}
+      document.getElementById("gasUrlInput").value = DEFAULT_GAS_URL;
+      showFeedback("success", "已恢復為預設的 Google Apps Script 部署網址。");
+    }
+
+    function showFeedback(type, message) {
+      const box = document.getElementById("feedbackBox");
+      box.classList.remove("hidden", "bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-rose-50", "border-rose-200", "text-rose-800");
+      if (type === "success") {
+        box.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
+      } else {
+        box.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
+      }
+      box.innerHTML = message;
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    // Submit to Google Sheets via GAS
+    async function submitToGoogleSheets() {
+      const gasUrl = getActiveGasUrl();
+      if (!gasUrl) {
+        showFeedback("error", "⚠️ 尚未設定 Google Apps Script 網址，請點擊右上角「⚙️ 試算表連線設定」。");
+        return;
+      }
+
+      const { libName, libCode, staffId, email } = formState.info;
+      if (!libName.trim() || !libCode.trim() || !staffId.trim() || !email.trim()) {
+        showFeedback("error", "⚠️ 請完整填寫上方「單位基本資訊」的四個必填欄位（圖書館名稱、代碼、填表人代號、電子郵件信箱）後再送出。");
+        document.getElementById("info_libName").focus();
+        return;
+      }
+
+      const btn = document.getElementById("submitBtn");
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.classList.add("opacity-70", "cursor-wait");
+      btn.innerHTML = `<span>正在寫入 Google 試算表，請稍候...</span>`;
+
+      // Prepare clean payload
+      const payload = {
+        info: {
+          libName: libName.trim(),
+          libCode: libCode.trim(),
+          staffId: staffId.trim(),
+          email: email.trim(),
+          submitDate: getTodayString()
+        },
+        marcFields: formState.marcFields,
+        branches: formState.branches.filter(r => r.name.trim() || r.code.trim()),
+        locations: formState.locations.filter(r => r.name.trim() || r.code.trim()),
+        itemTypes: formState.itemTypes.filter(r => r.name.trim() || r.code.trim()),
+        collections: formState.collections.filter(r => r.name.trim() || r.code.trim()),
+        classSources: formState.classSources.filter(r => r.name.trim() || r.code.trim()),
+        patronTypes: formState.patronTypes.filter(r => r.name.trim() || r.code.trim()),
+        itemStatuses: formState.itemStatuses.filter(r => r.name.trim() || r.code.trim()),
+        customFields: formState.customFields.filter(r => r.name.trim() || r.code.trim())
+      };
+
+      try {
+        // Use text/plain to avoid CORS preflight OPTIONS request on Google Apps Script
+        const response = await fetch(gasUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result && result.status === "success") {
+          showFeedback("success", `✅ <strong>資料已成功送出並寫入 Google 試算表！</strong><br/>單位：${escapeHtml(libName)} (${escapeHtml(libCode)}) ｜ 送出日期：${payload.info.submitDate}`);
+        } else {
+          throw new Error((result && result.message) || "試算表端回傳異常");
+        }
+      } catch (err) {
+        console.error("Submit error:", err);
+        showFeedback("error", `❌ <strong>送出時發生錯誤：</strong>${escapeHtml(err.message)}<br/><span class="text-xs">請確認 Google Apps Script 部署權限已設為「所有人 (Anyone)」，或稍後再試一次。</span>`);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove("opacity-70", "cursor-wait");
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // Boot
+    loadFromStorage();
+    renderAll();
+  </script>
 </body>
 </html>
