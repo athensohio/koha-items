@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Koha 圖書館系統導入 — 館藏段 (942 / 952) 與各項代碼對照資料收集服務</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS CDN for browser-local .ods generation -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     body { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .tab-btn { cursor: pointer; position: relative; z-index: 10; user-select: none; }
@@ -300,7 +302,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$a / 952$b — 圖書館名稱與分館代碼對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">若貴館有多個分館或總館，請逐筆列出分館名稱與對應代碼（例如：碩陽數位圖書館 / SYDTLIB）。</p>
+              <p class="text-xs text-slate-500 mt-0.5">若貴館有多個分館或總館，請逐筆列出分館名稱與對應代碼。</p>
             </div>
             <button type="button" data-add-cat="branches" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增分館</button>
           </div>
@@ -308,10 +310,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">圖書館 / 分館名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">碩陽數位圖書館</td>
+                  <td class="py-2 px-3 font-mono font-semibold">SYDTLIB</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_branches" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -323,7 +331,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$c — 排架位置對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">請列出館內各書庫、閱覽室或排架區域名稱與代碼（例如：館員櫃檯 / SD）。</p>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館內各書庫、閱覽室或排架區域名稱與代碼。</p>
             </div>
             <button type="button" data-add-cat="locations" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增排架位置</button>
           </div>
@@ -331,10 +339,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">排架位置名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">館員櫃檯</td>
+                  <td class="py-2 px-3 font-mono font-semibold">SD</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_locations" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -358,7 +372,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">942$c / 952$y — 館藏類型對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">請列出館藏類型名稱、代碼及是否開放外借（例如：圖書 / BK / 可外借）。</p>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館藏類型名稱、代碼及是否開放外借。</p>
             </div>
             <button type="button" data-add-cat="itemTypes" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增館藏類型</button>
           </div>
@@ -366,11 +380,18 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">館藏類型名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-32 text-center">可外借</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">圖書</td>
+                  <td class="py-2 px-3 font-mono font-semibold">BK</td>
+                  <td class="py-2 px-3 text-center font-medium">可外借</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_itemTypes" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -382,7 +403,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">952$8 — 特藏號對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">若有特藏區分（例如：科幻 / SIFI），請列出名稱與代碼。</p>
+              <p class="text-xs text-slate-500 mt-0.5">若有特藏區分，請列出名稱與代碼。</p>
             </div>
             <button type="button" data-add-cat="collections" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增特藏號</button>
           </div>
@@ -390,10 +411,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">特藏號名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">科幻</td>
+                  <td class="py-2 px-3 font-mono font-semibold">SIFI</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_collections" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -405,7 +432,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">942$2 / 952$2 — 分類法來源對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">請列出館內使用的分類法名稱與代碼（例如：中文圖書分類法 / ccL）。</p>
+              <p class="text-xs text-slate-500 mt-0.5">請列出館內使用的分類法名稱與代碼。</p>
             </div>
             <button type="button" data-add-cat="classSources" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增分類法來源</button>
           </div>
@@ -413,10 +440,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">分類法來源名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">中文圖書分類法</td>
+                  <td class="py-2 px-3 font-mono font-semibold">ccL</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_classSources" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -437,21 +470,33 @@
       <!-- TAB 5: Patron Types, Item Statuses, Custom Fields -->
       <div id="tabPanel_5" style="display:none;" class="p-5 space-y-8">
         <div>
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
             <div>
               <h3 class="text-base font-bold text-slate-800">讀者類型對照</h3>
-              <p class="text-xs text-slate-500 mt-0.5">請列出貴館的讀者身分別與對應代碼（例如：教職員 / STAFF、學生 / STU）。</p>
+              <p class="text-xs text-slate-500 mt-0.5">請列出貴館的讀者身分別與對應代碼；若需批次匯入讀者資料，可下載標準 ODS 格式範本參考。</p>
             </div>
-            <button type="button" data-add-cat="patronTypes" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增讀者類型</button>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <!-- 瀏覽器本地即時產生並下載 .ods 讀者匯入格式範本 -->
+              <button type="button" id="btnDownloadPatronOds" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                <span>📥 下載讀者匯入格式範例 (.ods)</span>
+              </button>
+              <button type="button" data-add-cat="patronTypes" class="add-row-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">+ 新增讀者類型</button>
+            </div>
           </div>
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">讀者類型名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">教職員 / 學生</td>
+                  <td class="py-2 px-3 font-mono font-semibold">STAFF / STU</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_patronTypes" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -471,10 +516,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">館藏狀態（中文）</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">遺失 / 編目中</td>
+                  <td class="py-2 px-3 font-mono font-semibold">LOST / PROC</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_itemStatuses" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -494,10 +545,16 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12 text-center">#</th>
+                  <th class="py-2.5 px-3 w-16 text-center">#</th>
                   <th class="py-2.5 px-3">名稱</th>
                   <th class="py-2.5 px-3">代碼</th>
                   <th class="py-2.5 px-3 w-20 text-center">操作</th>
+                </tr>
+                <tr class="bg-amber-50/90 text-amber-900 text-xs border-b border-amber-200/80">
+                  <td class="py-2 px-3 text-center"><span class="bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold">範例</span></td>
+                  <td class="py-2 px-3 font-medium">學院系所代碼</td>
+                  <td class="py-2 px-3 font-mono font-semibold">DEPT01</td>
+                  <td class="py-2 px-3 text-center text-amber-600/70">-</td>
                 </tr>
               </thead>
               <tbody id="tbody_customFields" class="divide-y divide-slate-200 text-sm"></tbody>
@@ -751,6 +808,57 @@
             panel.style.display = "none";
           }
         }
+      }
+
+      // Generate and download Koha Patron Import Template (.ods) matching user's exact specification
+      function downloadPatronImportOds() {
+        if (typeof XLSX === "undefined") {
+          showFeedback("error", "⚠️ 試算表元件尚未載入完成，請檢查網路連線並重新整理頁面後再試。");
+          return;
+        }
+
+        var patronImportHeaders = [
+          "cardnumber", "surname", "firstname", "preferred_name", "middle_name",
+          "title", "othernames", "initials", "pronouns", "streetnumber",
+          "streettype", "address", "address2", "city", "state",
+          "zipcode", "country", "email", "phone", "mobile",
+          "fax", "emailpro", "phonepro", "B_streetnumber", "B_streettype",
+          "B_address", "B_address2", "B_city", "B_state", "B_zipcode",
+          "B_country", "B_email", "B_phone", "dateofbirth", "branchcode",
+          "categorycode", "dateenrolled", "dateexpiry", "password_expiration_date", "date_renewed",
+          "gonenoaddress", "lost", "debarred", "debarredcomment", "contactname",
+          "contactfirstname", "contacttitle", "borrowernotes", "relationship", "sex",
+          "password", "secret", "auth_method", "flags", "userid",
+          "opacnote", "contactnote", "sort1", "sort2", "altcontactfirstname",
+          "altcontactsurname", "altcontactaddress1", "altcontactaddress2", "altcontactaddress3", "altcontactstate",
+          "altcontactzipcode", "altcontactcountry", "altcontactphone", "smsalertnumber", "sms_provider_id",
+          "privacy", "privacy_guarantor_fines", "privacy_guarantor_checkouts", "checkprevcheckout", "updated_on",
+          "lastseen", "lang", "login_attempts", "overdrive_auth_token", "anonymized",
+          "autorenew_checkouts", "primary_contact_method", "protected", "patron_attributes", "guarantor_relationship",
+          "guarantor_id"
+        ];
+
+        var guideRows = [
+          ["欄位名稱", "中文欄位名稱", "說明", "填寫程度"],
+          ["cardnumber", "讀者證號碼", "需為唯一值", "必填"],
+          ["surname", "姓", "", "必填"],
+          ["firstname", "名", "", "建議填寫"],
+          ["email", "電子信箱", "沒有不好聯絡", "建議填寫"],
+          ["branchcode", "圖書館代碼", "需同系統上設定的代碼值", "必填"],
+          ["categorycode", "讀者類型代碼", "需同系統上設定的代碼值", "必填"],
+          ["password", "密碼", "系統會產生隨機密碼, 管理者也無法知道, 建議填寫亂數後, 請讀者取得後自行修改.", "建議填寫"],
+          ["userid", "使用者名稱", "需為唯一值且為英文或數字, 若未填, 系統會填「姓.名」恐造成未來系統問題", "建議填寫"]
+        ];
+
+        var wb = XLSX.utils.book_new();
+        var wsPatron = XLSX.utils.aoa_to_sheet([patronImportHeaders]);
+        var wsGuide = XLSX.utils.aoa_to_sheet(guideRows);
+        wsGuide["!cols"] = [{ wch: 18 }, { wch: 18 }, { wch: 56 }, { wch: 14 }];
+
+        XLSX.utils.book_append_sheet(wb, wsPatron, "patron_import");
+        XLSX.utils.book_append_sheet(wb, wsGuide, "說明");
+
+        XLSX.writeFile(wb, "Koha_讀者匯入格式範例.ods", { bookType: "ods" });
       }
 
       function renderSysPrefTable() {
@@ -1104,6 +1212,12 @@
           document.getElementById("clearConfirmBar").style.display = "none";
           showFeedback("success", "已清空所有欄位並恢復為預設狀態。");
         });
+
+        // Download Patron Import ODS button
+        var btnOds = document.getElementById("btnDownloadPatronOds");
+        if (btnOds) {
+          btnOds.addEventListener("click", downloadPatronImportOds);
+        }
 
         document.getElementById("submitBtn").addEventListener("click", submitToGoogleSheets);
       }
